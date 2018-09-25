@@ -5,15 +5,16 @@ let collision = [];
 let LeadInfo = {
     width: 90,
     height: 125,
-    openID: 0,// 玩家ID
+    openID: 0,// 玩家微信ID
     locklist: [],// 商店列表
     palaceList: [],// 冷宫列表
+    Leadlist: 0,// 当前主角数量
 }
 
 // 动画数据
 let adminPool = {
     Range: null, // 动画池边界
-    child: [],// 当前在动画池中节点
+    child: 0,// 当前在动画池中节点
     maxLength: 6,// 最大节点数
 }
 
@@ -182,6 +183,7 @@ let init_alert = (type, create_handler: any = null, clear_handler: any = null, c
         if (!!clear_handler && clear_handler instanceof Function) clear_handler();//关闭窗口时执行
         type_obj._close();
     });
+    type_obj.zOrder = 100;
     return type_obj;
 }
 
@@ -335,16 +337,68 @@ let Format = (value: string) => {
 }
 
 // 提示弹框
-let tips = () => {
+let tips = (msg, type: string = null, x: number = null, y: number = null) => {
+    if (!!type && type === "coin") {
+        var bg = new Laya.Image("index/copper2.png");
+        bg.x = 300;
+        bg.y = 170;
+        bg.width = 50;
+        bg.height = 50;
+        bg.anchorX = 0.5;
+        bg.anchorY = 0.5;
+        bg.alpha = 1;
 
+        var text = new Laya.Label(`+ ${msg}`);
+        text.fontSize = 30;
+        text.color = "#653e21";
+        text.x = 60;
+        text.y = 10;
+        text.bold = true;
+        bg.addChild(text);
+
+        bg.zOrder = 99;
+        Laya.stage.addChild(bg);
+
+        Laya.Tween.to(bg, { y: 90, alpha: 0 }, 1500, Laya.Ease.strongInOut, Laya.Handler.create(this, function (obj) {
+            Laya.timer.once(1000, this, function (arg) {
+                Laya.stage.removeChild(arg);
+            }, [obj])
+        }, [bg]), 0);
+
+    } else {
+        var bg = new Laya.Image("index/yuanbao_bg.png");
+        bg.x = Laya.stage.width / 2;
+        bg.y = Laya.stage.height / 2 + 100;
+        bg.anchorX = 0.5;
+        bg.anchorY = 0.5;
+        bg.alpha = 0;
+
+        var text = new Laya.Label(msg + "");
+        text.anchorX = 0.5;
+        text.anchorY = 0.5;
+        text.fontSize = 25;
+        text.color = "#653e21";
+        text.x = bg.width / 2;
+        text.y = bg.height / 2;
+        bg.addChild(text);
+
+        bg.zOrder = 99;
+        Laya.stage.addChild(bg);
+
+        Laya.Tween.to(bg, { y: Laya.stage.height / 2, alpha: 1 }, 500, Laya.Ease.strongInOut, Laya.Handler.create(this, function (obj) {
+            Laya.timer.once(1000, this, function (arg) {
+                Laya.stage.removeChild(arg);
+            }, [obj])
+        }, [bg]), 0);
+    }
 }
 
 // 获取人物价格
-let getLeadPrice = (grade:string) => {
+let getLeadPrice = (grade: string) => {
     let target;
     LeadInfo.locklist.forEach(item => {
         if (item.grade === grade) {
-            target =  item.price;
+            target = item.price;
             return;
         }
     })

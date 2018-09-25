@@ -9,15 +9,20 @@ var GAME;
                 x: 2,
                 y: 0.1
             };
+            LeadInfo.Leadlist += 1;
             this.id = data.roleid; // 主角id
             this.grade = (!!data.grade) ? String(data.grade) : console.log("未获取到等级");
-            this.state = (!!data.iswork) ? Number(data.iswork) : console.log("未获取到工作状态");
+            this.state = (!!data.iswork) ? data.iswork : console.log("未获取到工作状态");
             this.stage = stage; // 场景
             this.wages = (!!data.wages) ? Number(data.wages) : console.log("未获到金币生产速度");
             this.position = (!!data.position) ? Number(data.position) : console.log("未获取到位置");
+            this.pos = this.position;
             this.cycle = (!!data.cycle) ? Number(data.cycle) : console.log("未获取到周期");
-            console.log(this);
             this.range = adminPool.Range; // 动画边界
+            this.speed = {
+                x: this.cycle / 1000,
+                y: this.cycle / 10000
+            };
             this.init();
         }
         lead.prototype.init = function () {
@@ -39,19 +44,21 @@ var GAME;
             }
             else {
                 console.log("无法获取到主角的位置");
+                this.icon.child.pos(-100, -100);
+                this.icon.parent.pos(-100, -100);
+                return;
             }
             pos["leadClass"] = this;
             this.seat = pos;
             // 拖动事件
             drag(this.icon.parent, function (self, target) {
                 if (target.name === "AnimationPool") {
-                    if (adminPool.child.length >= adminPool.maxLength) {
+                    if (adminPool.child >= adminPool.maxLength) {
                         console.log("已经满员了!");
                         Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 350);
                     }
                     else {
                         _this.work(); // 开始工作
-                        adminPool.child.push(_this.icon.parent);
                     }
                 }
                 else {
@@ -60,8 +67,8 @@ var GAME;
                         console.log("回收");
                     }
                     else if (!target.leadClass) {
-                        console.log("空槽位");
-                        _this.changePos(target);
+                        console.log(" 空槽位 ");
+                        _this.replacePos(target, { id: _this.id, pos: target.name.slice(4) });
                     }
                     else if (target.leadClass.id == _this.id) {
                         console.log("原槽位");
@@ -69,20 +76,54 @@ var GAME;
                     }
                     else if (target.leadClass.grade === _this.grade) {
                         console.log("升级合体");
-                        // 网络请求接口
-                        _this.delete(); // 删除当前节点
-                        target.leadClass.upgrade(); // 调用对方节点进行升级
+                        _this.upgrade(target.leadClass);
                     }
                     else {
                         console.log("调换位置");
-                        _this.changePos(target); // 更新位置
+                        _this.replacePos(target, { id: _this.id, pos: target.name.slice(4) }, { id: target.leadClass.id, pos: _this.pos });
                     }
                 }
             });
+            // 工作状态
+            if (this.state === "1") {
+                this.icon.parent.touchState = false; // 暂停拖动
+                this.cointimer("open"); // 金币计时器
+                this.AdminTimer = true;
+                this.adminUpdate(); // 运动动画
+                this.endWork(); // 结束工作控制
+                adminPool.child += 1;
+            }
         };
         // 升级
-        lead.prototype.upgrade = function () {
+        lead.prototype.upgrade = function (datas) {
+            var _this = this;
             console.log("开始升级");
+            Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/composerole.php", {
+                openid: LeadInfo.openID,
+                role1: this.id,
+                role2: datas.id,
+                position: datas.pos,
+            }, function (data) {
+                _this.delete();
+                datas.delete();
+                tips("升级成功");
+                var user = {
+                    roleid: data.roleid,
+                    grade: data.grade,
+                    iswork: data.iswork,
+                    position: data.position,
+                    wages: data.wages,
+                    cycle: data.cycle,
+                };
+                new GAME.lead(user, _this.stage);
+                Laya.stage.event("rolelevelSet", data.role_level); // 更新人物解锁等级
+                if (!!data.islock && data.islock === "2") {
+                    console.log("人物解锁列表更新");
+                }
+            }, function (err) {
+                tips("升级失败");
+                Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 350);
+            });
         };
         // 更换位置
         lead.prototype.changePos = function (target) {
@@ -109,6 +150,36 @@ var GAME;
             if (!!b["leadClass"])
                 b["leadClass"].seat = _data;
         };
+        // 更换位置请求
+        lead.prototype.replacePos = function (target, obj, obj2) {
+            var _this = this;
+            if (obj2 === void 0) { obj2 = null; }
+            var self = this;
+            Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/changepos.php", {
+                openid: LeadInfo.openID,
+                roleid: obj.id,
+                position: obj.pos
+            }, function (data) {
+                if (!!obj2) {
+                    Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/changepos.php", {
+                        openid: LeadInfo.openID,
+                        roleid: obj2.id,
+                        position: obj2.pos
+                    }, function (data) {
+                        _this.changePos(target); // 更换位置
+                    }, function (err) {
+                        console.log("第二个主角未成功调换位置");
+                    });
+                }
+                else {
+                    _this.changePos(target); // 更换位置
+                }
+                console.log("位置调换成功");
+            }, function (err) {
+                tips("无法调换位置");
+                Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 350);
+            });
+        };
         // 开始工作
         lead.prototype.work = function () {
             Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/runrole.php", {
@@ -116,6 +187,7 @@ var GAME;
                 roleid: this.id
             }, function (data) {
                 console.log("开始工作");
+                adminPool.child += 1;
             }, function (err) {
                 console.log("工作请求失败");
             });
@@ -133,11 +205,17 @@ var GAME;
             if (type === "open") {
                 this.Timer = window.setInterval(function () {
                     Laya.stage.event("MoneyAdd", _this.wages * _this.Multiple);
+                    tips(Format((_this.wages * _this.Multiple).toString()), "coin");
                 }, this.cycle);
+                // 更改总速度
+                Laya.stage.event("speedSet", this.wages / (this.cycle / 1000));
             }
             else if (type === "stop") {
+                window.clearInterval(this.Timer);
+                Laya.stage.event("speedSet", -this.wages / (this.cycle / 1000));
             }
             else if (type === "replace") {
+                window.clearInterval(this.Timer);
             }
         };
         // 回收
@@ -146,13 +224,14 @@ var GAME;
             Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/callbackrole.php", {
                 openid: LeadInfo.openID,
                 roleid: this.id,
-                coid: addition(window["___index"].GameInfo.coin, getLeadPrice(this.grade))
+                coin: addition(window["___index"].GameInfo.coin, getLeadPrice(this.grade))
             }, function (data) {
-                console.log("回收成功");
+                tips("回收成功");
                 Laya.stage.event("MoneySet", addition(window["___index"].GameInfo.coin, getLeadPrice(_this.grade)));
                 _this.delete();
+                LeadInfo.Leadlist -= 1;
             }, function (err) {
-                console.log("回收失败");
+                tips("回收失败");
                 Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 350);
             });
         };
@@ -184,16 +263,22 @@ var GAME;
         lead.prototype.endWork = function () {
             var _this = this;
             this.icon.child.once(Laya.Event.CLICK, this, function (e) {
-                _this.AdminTimer = false; // 停止动画
-                Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 300);
-                window.setTimeout(function () {
-                    _this.icon.parent.touchState = true; // 开启拖动
-                    adminPool.child.forEach(function (element, index) {
-                        if (element.id = _this.id) {
-                            adminPool.child.splice(index, 1);
-                        }
-                    });
-                }, 500);
+                Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/stoprole.php", {
+                    openid: LeadInfo.openID,
+                    roleid: _this.id,
+                    position: _this.seat.name.slice(4)
+                }, function (data) {
+                    _this.AdminTimer = false; // 停止动画
+                    _this.cointimer("stop"); // 停止工作
+                    Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 300);
+                    window.setTimeout(function () {
+                        _this.icon.parent.touchState = true; // 开启拖动
+                        adminPool.child -= 1;
+                    }, 500);
+                }, function (err) {
+                    console.log("无法停止工作");
+                    Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 350);
+                });
             });
         };
         // 清空
@@ -201,8 +286,7 @@ var GAME;
             this.icon.parent.destroy();
             this.icon.child.destroy();
             this.AdminTimer = false; // 停止动画
-            if (!!this.Timer)
-                window.clearInterval(this.Timer); // 结束金币计时器
+            this.cointimer("stop");
             this.seat.leadClass = null;
         };
         return lead;

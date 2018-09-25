@@ -2,7 +2,7 @@
     "x":0,
     "type":"View",
     "selectedBox":1,
-    "selecteID":41,
+    "selecteID":40,
     "props":{"width":720,"sceneColor":"#ffffff","height":1280},
     "nodeParent":-1,
     "label":"View",
@@ -379,9 +379,9 @@
         {
             "x":15,
             "type":"Text",
-            "props":{"y":104,"x":321,"text":"100B/秒","fontSize":25,"font":"Arial","color":"#fff5e2","bold":true},
+            "props":{"y":110,"x":325,"var":"coinspeed","text":"0/秒","name":"coinspeed","fontSize":35,"font":"Arial","color":"#fff5e2","bold":true},
             "nodeParent":1,
-            "label":"Text",
+            "label":"Text(coinspeed)",
             "isDirectory":false,
             "isAniNode":true,
             "hasChild":false,
@@ -426,19 +426,6 @@
             "isAniNode":true,
             "hasChild":false,
             "compId":42,
-            "child":[
-                ]
-        },
-        {
-            "x":15,
-            "type":"Text",
-            "props":{"y":130,"x":323,"text":"1000B","fontSize":25,"font":"Arial","color":"#fff5e2","bold":true},
-            "nodeParent":1,
-            "label":"Text",
-            "isDirectory":false,
-            "isAniNode":true,
-            "hasChild":false,
-            "compId":43,
             "child":[
                 ]
         },

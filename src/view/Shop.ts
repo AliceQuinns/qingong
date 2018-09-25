@@ -4,8 +4,6 @@ module GAME {
         private list;// 人物列表
         constructor(data) {
             this.list = data;
-            console.log(data);
-            console.log("商店");
         }
         private open() {
             let data = this.list;// 人物数据

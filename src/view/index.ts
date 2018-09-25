@@ -12,7 +12,7 @@ module GAME {
             coin: "0",// 金币
             diamonds: "0",// 元宝
             volum: "0",// 奖券
-            speed: "0",// 当前总速度
+            speed: 0,// 当前总速度
             grade: 1,// 用户等级
             role_level: 1,// 人物的解锁等级
         };
@@ -20,6 +20,7 @@ module GAME {
         private _Money; // 金币对象
         private _Lottery;// 抽奖券对象
         private _Diamonds;// 金元宝对象
+        private _coinspeed;// 金币速度对象
 
         constructor() {
             Laya.loader.load([
@@ -89,6 +90,11 @@ module GAME {
                     this.palace = new GAME.palace(LeadInfo.palaceList);// 冷宫模块
 
                     this.event();// 事件监听
+
+                    // 定时更新服务器金币
+                    window.setInterval(() => {
+                        Laya.stage.event("updateCoin");
+                    }, 30000);
                 }
             }, err => {
                 console.log(err, "无法请求数据");
@@ -100,6 +106,7 @@ module GAME {
         private staticObj() {
             this._Money = this.indexUI.coin as Laya.Text;
             this._Diamonds = this.indexUI._Diamonds as Laya.Text;
+            this._coinspeed = this.indexUI.coinspeed as Laya.Text;
         }
 
         // 事件
@@ -127,8 +134,14 @@ module GAME {
         private customEvent() {
             // 修改金币
             Laya.stage.on("MoneySet", this, e => {
-                this.GameInfo.coin = String(e);
-                this._Money.text = Format(this.GameInfo.coin);
+                if (e <= 0) {
+                    this.GameInfo.coin = "0";
+                    this._Money.text = "0";
+                    console.log("无金币");
+                } else {
+                    this.GameInfo.coin = String(e);
+                    this._Money.text = Format(this.GameInfo.coin);
+                }
             })
             // 添加金币
             Laya.stage.on("MoneyAdd", this, e => {
@@ -168,11 +181,36 @@ module GAME {
             // 更新商店价格
             Laya.stage.on("locklistSet", this, e => {
                 if (!e.grade || !e.value) { console.error("更新商店价格出错"); return; }
-                LeadInfo.locklist.forEach((item, index) => { 
-                    if(item.grade === String(e.grade)){
+                LeadInfo.locklist.forEach((item, index) => {
+                    if (item.grade === String(e.grade)) {
                         item.price = e.value;
                     }
                 })
+            })
+            // 更新玩家解锁等级
+            Laya.stage.on("rolelevelSet", this, e => {
+                if (!!e) this.GameInfo.role_level = e;
+                console.log("更新人物解锁等级为", e);
+            })
+
+            // 更新服务器金币
+            Laya.stage.on("updateCoin", this, e => {
+                Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/updateOutLine.php", {
+                    openid: LeadInfo.openID,
+                    coin: this.GameInfo.coin,
+                    timestamp: Date.parse(new Date().toString())
+                }, data => {
+                    console.log("已经更新服务器金币数据");
+                }, err => {
+
+                })
+            })
+
+            // 金币速度更改
+            Laya.stage.on("speedSet", this, e => {
+                this.GameInfo.speed += e;
+                if(this.GameInfo.speed<=0)this.GameInfo.speed = 0;
+                this._coinspeed.text = `${Format(Math.floor(this.GameInfo.speed).toString())}/秒`;
             })
         }
 
@@ -188,11 +226,18 @@ module GAME {
 
         // 主角购买
         private leadshop() {
+            if (LeadInfo.Leadlist >= 12) {
+                tips("后宫已满");
+                return;
+            }
+            if (this.GameInfo.coin === "0") {
+                tips("金币不足");
+                return;
+            }
             Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/buyrole.php", {
                 openid: this.GameInfo.userid,
-                grade: this.GameInfo.role_level
+                grade: this.GameInfo.role_level // 购买等级
             }, data => {
-                console.log("购买成功");
                 console.log(data);
                 if (data.status === "success") {
                     let user = {
@@ -207,8 +252,11 @@ module GAME {
                 }
                 // 用户剩余金币
                 var coin = data.coin;
+                Laya.stage.event("MoneySet", coin);
+
+                tips("购买成功");
             }, err => {
-                console.log("购买失败");
+                tips("购买失败");
             });
         }
 

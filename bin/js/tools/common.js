@@ -8,11 +8,12 @@ var LeadInfo = {
     openID: 0,
     locklist: [],
     palaceList: [],
+    Leadlist: 0,
 };
 // 动画数据
 var adminPool = {
     Range: null,
-    child: [],
+    child: 0,
     maxLength: 6,
 };
 var Ajax = function (type, url, data, success, failed) {
@@ -177,6 +178,7 @@ var init_alert = function (type, create_handler, clear_handler, close) {
             clear_handler(); //关闭窗口时执行
         type_obj._close();
     });
+    type_obj.zOrder = 100;
     return type_obj;
 };
 // 窗口弹出动画 status: 0初始化,1显示,2隐藏 target:目标 create_handler:窗口显示后的回调 clear_handler:窗口隐藏后的回调
@@ -336,7 +338,57 @@ var Format = function (value) {
     return text;
 };
 // 提示弹框
-var tips = function () {
+var tips = function (msg, type, x, y) {
+    if (type === void 0) { type = null; }
+    if (x === void 0) { x = null; }
+    if (y === void 0) { y = null; }
+    if (!!type && type === "coin") {
+        var bg = new Laya.Image("index/copper2.png");
+        bg.x = 300;
+        bg.y = 170;
+        bg.width = 50;
+        bg.height = 50;
+        bg.anchorX = 0.5;
+        bg.anchorY = 0.5;
+        bg.alpha = 1;
+        var text = new Laya.Label("+ " + msg);
+        text.fontSize = 30;
+        text.color = "#653e21";
+        text.x = 60;
+        text.y = 10;
+        text.bold = true;
+        bg.addChild(text);
+        bg.zOrder = 99;
+        Laya.stage.addChild(bg);
+        Laya.Tween.to(bg, { y: 90, alpha: 0 }, 1500, Laya.Ease.strongInOut, Laya.Handler.create(_this, function (obj) {
+            Laya.timer.once(1000, this, function (arg) {
+                Laya.stage.removeChild(arg);
+            }, [obj]);
+        }, [bg]), 0);
+    }
+    else {
+        var bg = new Laya.Image("index/yuanbao_bg.png");
+        bg.x = Laya.stage.width / 2;
+        bg.y = Laya.stage.height / 2 + 100;
+        bg.anchorX = 0.5;
+        bg.anchorY = 0.5;
+        bg.alpha = 0;
+        var text = new Laya.Label(msg + "");
+        text.anchorX = 0.5;
+        text.anchorY = 0.5;
+        text.fontSize = 25;
+        text.color = "#653e21";
+        text.x = bg.width / 2;
+        text.y = bg.height / 2;
+        bg.addChild(text);
+        bg.zOrder = 99;
+        Laya.stage.addChild(bg);
+        Laya.Tween.to(bg, { y: Laya.stage.height / 2, alpha: 1 }, 500, Laya.Ease.strongInOut, Laya.Handler.create(_this, function (obj) {
+            Laya.timer.once(1000, this, function (arg) {
+                Laya.stage.removeChild(arg);
+            }, [obj]);
+        }, [bg]), 0);
+    }
 };
 // 获取人物价格
 var getLeadPrice = function (grade) {

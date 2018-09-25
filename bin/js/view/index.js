@@ -8,7 +8,7 @@ var GAME;
                 coin: "0",
                 diamonds: "0",
                 volum: "0",
-                speed: "0",
+                speed: 0,
                 grade: 1,
                 role_level: 1,
             };
@@ -61,6 +61,10 @@ var GAME;
                     _this.shop = new GAME.shop(LeadInfo.locklist); // 商店模块
                     _this.palace = new GAME.palace(LeadInfo.palaceList); // 冷宫模块
                     _this.event(); // 事件监听
+                    // 定时更新服务器金币
+                    window.setInterval(function () {
+                        Laya.stage.event("updateCoin");
+                    }, 30000);
                 }
             }, function (err) {
                 console.log(err, "无法请求数据");
@@ -70,6 +74,7 @@ var GAME;
         index.prototype.staticObj = function () {
             this._Money = this.indexUI.coin;
             this._Diamonds = this.indexUI._Diamonds;
+            this._coinspeed = this.indexUI.coinspeed;
         };
         // 事件
         index.prototype.event = function () {
@@ -97,8 +102,15 @@ var GAME;
             var _this = this;
             // 修改金币
             Laya.stage.on("MoneySet", this, function (e) {
-                _this.GameInfo.coin = String(e);
-                _this._Money.text = Format(_this.GameInfo.coin);
+                if (e <= 0) {
+                    _this.GameInfo.coin = "0";
+                    _this._Money.text = "0";
+                    console.log("无金币");
+                }
+                else {
+                    _this.GameInfo.coin = String(e);
+                    _this._Money.text = Format(_this.GameInfo.coin);
+                }
             });
             // 添加金币
             Laya.stage.on("MoneyAdd", this, function (e) {
@@ -143,6 +155,30 @@ var GAME;
                     }
                 });
             });
+            // 更新玩家解锁等级
+            Laya.stage.on("rolelevelSet", this, function (e) {
+                if (!!e)
+                    _this.GameInfo.role_level = e;
+                console.log("更新人物解锁等级为", e);
+            });
+            // 更新服务器金币
+            Laya.stage.on("updateCoin", this, function (e) {
+                Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/updateOutLine.php", {
+                    openid: LeadInfo.openID,
+                    coin: _this.GameInfo.coin,
+                    timestamp: Date.parse(new Date().toString())
+                }, function (data) {
+                    console.log("已经更新服务器金币数据");
+                }, function (err) {
+                });
+            });
+            // 金币速度更改
+            Laya.stage.on("speedSet", this, function (e) {
+                _this.GameInfo.speed += e;
+                if (_this.GameInfo.speed <= 0)
+                    _this.GameInfo.speed = 0;
+                _this._coinspeed.text = Format(Math.floor(_this.GameInfo.speed).toString()) + "/\u79D2";
+            });
         };
         // 批量创建主角对象
         index.prototype.Lead = function (data) {
@@ -156,11 +192,18 @@ var GAME;
         // 主角购买
         index.prototype.leadshop = function () {
             var _this = this;
+            if (LeadInfo.Leadlist >= 12) {
+                tips("后宫已满");
+                return;
+            }
+            if (this.GameInfo.coin === "0") {
+                tips("金币不足");
+                return;
+            }
             Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/buyrole.php", {
                 openid: this.GameInfo.userid,
-                grade: this.GameInfo.role_level
+                grade: this.GameInfo.role_level // 购买等级
             }, function (data) {
-                console.log("购买成功");
                 console.log(data);
                 if (data.status === "success") {
                     var user = {
@@ -175,8 +218,10 @@ var GAME;
                 }
                 // 用户剩余金币
                 var coin = data.coin;
+                Laya.stage.event("MoneySet", coin);
+                tips("购买成功");
             }, function (err) {
-                console.log("购买失败");
+                tips("购买失败");
             });
         };
         // 碰撞矩阵

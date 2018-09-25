@@ -4,8 +4,6 @@ var GAME;
     var shop = /** @class */ (function () {
         function shop(data) {
             this.list = data;
-            console.log(data);
-            console.log("商店");
         }
         shop.prototype.open = function () {
             var data = this.list; // 人物数据
