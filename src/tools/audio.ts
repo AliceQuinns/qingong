@@ -28,7 +28,8 @@ module GAME {
         }
 
         // 背景音乐
-        onBGM = (prop:any = "") => {
+        onBGM = (prop: any = "") => {
+            if (!window["wx"]) return;
             let target = this.audiopool["bgm"];
             if (!this.status) return;
             if (prop === "close") {
@@ -48,7 +49,8 @@ module GAME {
 
         // 音效
         _Sound = (type) => {
-            if(!this._url[type])return;
+            if (!window["wx"]) return;
+            if (!this._url[type]) return;
 
             if (!this.status) return;
             let target = this.audiopool[type];

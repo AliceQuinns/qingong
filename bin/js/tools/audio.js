@@ -18,6 +18,8 @@ var GAME;
             // 背景音乐
             this.onBGM = function (prop) {
                 if (prop === void 0) { prop = ""; }
+                if (!window["wx"])
+                    return;
                 var target = _this.audiopool["bgm"];
                 if (!_this.status)
                     return;
@@ -38,6 +40,8 @@ var GAME;
             };
             // 音效
             this._Sound = function (type) {
+                if (!window["wx"])
+                    return;
                 if (!_this._url[type])
                     return;
                 if (!_this.status)
