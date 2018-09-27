@@ -2,7 +2,7 @@
     "x":0,
     "type":"Dialog",
     "selectedBox":3,
-    "selecteID":10,
+    "selecteID":22,
     "props":{"width":750,"sceneColor":"#ffffff","height":1280},
     "nodeParent":-1,
     "label":"Dialog",
@@ -165,7 +165,7 @@
                 {
                     "x":30,
                     "type":"Text",
-                    "props":{"y":301,"x":-360,"width":750,"var":"reward","valign":"middle","text":"获得12340个元宝","strokeColor":"#101010","stroke":8,"pivotY":0.5,"pivotX":0.5,"name":"reward","height":70,"fontSize":50,"font":"Arial","color":"#fff505","bold":true,"align":"center"},
+                    "props":{"y":301,"x":-360,"width":750,"var":"reward","valign":"middle","text":"获得12340个元宝","strokeColor":"#101010","stroke":8,"pivotY":0.5,"pivotX":0.5,"name":"reward","height":70,"fontSize":30,"font":"Arial","color":"#fffde3","bold":true,"align":"center"},
                     "nodeParent":3,
                     "label":"Text(reward)",
                     "isDirectory":false,

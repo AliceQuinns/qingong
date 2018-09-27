@@ -15,7 +15,7 @@ let LeadInfo = {
 let adminPool = {
     Range: null, // 动画池边界
     child: 0,// 当前在动画池中节点
-    maxLength: 6,// 最大节点数
+    maxLength: 5,// 最大节点数
 }
 
 let Ajax = (type: string, url: string, data: Object, success: any = null, failed: any = null) => {
@@ -53,7 +53,7 @@ let Ajax = (type: string, url: string, data: Object, success: any = null, failed
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
             if (xhr.status == 200) {
-                success(JSON.parse(xhr.responseText));
+                if (!!xhr.responseText) success(JSON.parse(xhr.responseText));
             } else {
                 if (!!failed) {
                     failed(xhr.status);
@@ -382,7 +382,7 @@ let tips = (msg, type: string = null, x: number = null, y: number = null) => {
         text.y = bg.height / 2;
         bg.addChild(text);
 
-        bg.zOrder = 99;
+        bg.zOrder = 200;
         Laya.stage.addChild(bg);
 
         Laya.Tween.to(bg, { y: Laya.stage.height / 2, alpha: 1 }, 500, Laya.Ease.strongInOut, Laya.Handler.create(this, function (obj) {
@@ -405,58 +405,14 @@ let getLeadPrice = (grade: string) => {
     return target;
 }
 
-// 模拟数据
-let _data = {
-    coin: 123123123,
-    last_time: Date.parse(String(new Date())),
-    fish_list: [
-        {
-            id: 12,
-            grade: 1,
-            position: 1,
-            is_work: 0,
-            start_tim: Date.parse(String(new Date())),
-            wages: 123123132,
-        },
-        {
-            id: 16,
-            grade: 1,
-            position: 3,
-            is_work: 0,
-            start_tim: Date.parse(String(new Date())),
-            wages: 123123132,
-        },
-        {
-            id: 1,
-            grade: 1,
-            position: 5,
-            is_work: 0,
-            start_tim: Date.parse(String(new Date())),
-            wages: 123123132,
-        },
-        {
-            id: 18,
-            grade: 1,
-            position: 8,
-            is_work: 0,
-            start_tim: Date.parse(String(new Date())),
-            wages: 123123132,
-        },
-        {
-            id: 188,
-            grade: 1,
-            position: 9,
-            is_work: 0,
-            start_tim: Date.parse(String(new Date())),
-            wages: 123123132,
-        }
-    ],
-    buy_fish_list: [
-        {
-            grade: 12,
-            type: 1,
-            price: 12313,
-            need_grade: 12
-        }
-    ]
+// 爱心动画
+let loveadmin = (target,time,pos) => {
+    var skeleton = new Laya.Skeleton();
+    target.addChild(skeleton);
+    skeleton.pos(pos.x, pos.y);
+    skeleton.load("https://shop.yunfanshidai.com/xcxht/qinggong/res/animation/love.sk");
+
+    window.setTimeout(()=>{
+        skeleton.destroy();
+    },time);
 }

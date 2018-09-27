@@ -40,8 +40,8 @@ module GAME {
             this.range = adminPool.Range;// 动画边界
 
             this.speed = {
-                x: this.cycle/1000,
-                y: this.cycle/10000
+                x: this.cycle / 1000,
+                y: this.cycle / 10000
             }
 
             this.init();
@@ -67,7 +67,7 @@ module GAME {
                 this.icon.parent.pos(pos.x + (pos.width / 2 - this.icon.child.width / 2), pos.y);
                 this.position = { x: pos.x + (pos.width / 2 - this.icon.child.width / 2), y: pos.y };
             } else {
-                console.log("无法获取到主角的位置");
+                console.log("无法获取到主角的位置",this.pos);
                 this.icon.child.pos(-100, -100);
                 this.icon.parent.pos(-100, -100);
                 return;
@@ -81,6 +81,7 @@ module GAME {
                 if (target.name === "AnimationPool") {
                     if (adminPool.child >= adminPool.maxLength) {
                         console.log("已经满员了!");
+                        tips("最大不超过5个");
                         Laya.Tween.to(this.icon.parent, { x: this.position.x, y: this.position.y }, 350);
                     } else {
                         this.work();// 开始工作
@@ -137,6 +138,8 @@ module GAME {
                 role2: datas.id,
                 position: datas.pos,
             }, data => {
+                loveadmin(this.stage,500,{x: datas.position.x+50,y: datas.position.y+50});// 爱心动画
+
                 this.delete();
                 datas.delete();
 
@@ -151,11 +154,13 @@ module GAME {
                 };
                 new GAME.lead(user, this.stage);
 
-                Laya.stage.event("rolelevelSet", data.role_level);// 更新人物解锁等级
+                if(!!data.role_level)Laya.stage.event("rolelevelSet", data.role_level);// 更新人物解锁等级
 
-                if (!!data.islock && data.islock === "2") {
+                if (!!data.islock && data.islock === 2) {
                     console.log("人物解锁列表更新");
+                    this.unlock(data.lockinfo,data.role_name);
                 }
+
             }, err => {
                 tips("升级失败");
                 Laya.Tween.to(this.icon.parent, { x: this.position.x, y: this.position.y }, 350);
@@ -251,13 +256,41 @@ module GAME {
                 }, this.cycle);
 
                 // 更改总速度
-                Laya.stage.event("speedSet",this.wages/(this.cycle/1000));
+                Laya.stage.event("speedSet", this.wages);
             } else if (type === "stop") {
                 window.clearInterval(this.Timer);
-                 Laya.stage.event("speedSet",-this.wages/(this.cycle/1000));
+                Laya.stage.event("speedSet", -this.wages);
             } else if (type === "replace") {
                 window.clearInterval(this.Timer);
             }
+        }
+
+        // 解锁新人物
+        private unlock(data,name) {
+
+            let targetUI = init_alert(ui.upgradeUI);
+
+            // 炫耀按钮
+            let btn = targetUI.getChildByName("content").getChildByName("shared") as Laya.Button;
+            addClick(btn,()=>{
+                console.log("分享");
+            },this);
+
+            // 花朵动画
+            let Flower = targetUI.getChildByName("content").getChildByName("Flower") as Laya.Image;
+            // scaleAdmin(Flower);
+
+            // 主角动画
+            let Lead = targetUI.getChildByName("content").getChildByName("Lead") as Laya.Image;
+            Lead.skin = `Lead/${data.grade}.png`;
+            // scaleAdmin(Lead);
+
+            // 主角姓名
+            let LeadName = targetUI.getChildByName("content").getChildByName("LeadName") as Laya.Text;
+            LeadName.text = name;
+
+            // 更新商店解锁列表
+            Laya.stage.event("locklistUnlock",{type: 1, grade: data.grade, diamond: data.diamond, price: data.price});
         }
 
         // 回收
@@ -271,7 +304,7 @@ module GAME {
                 Laya.stage.event("MoneySet", addition(window["___index"].GameInfo.coin, getLeadPrice(this.grade)));
                 this.delete();
 
-                LeadInfo.Leadlist -= 1;
+                // LeadInfo.Leadlist -= 1;
             }, err => {
                 tips("回收失败");
                 Laya.Tween.to(this.icon.parent, { x: this.position.x, y: this.position.y }, 350);
@@ -333,6 +366,7 @@ module GAME {
             this.AdminTimer = false;// 停止动画
             this.cointimer("stop");
             this.seat.leadClass = null;
+            LeadInfo.Leadlist -= 1;
         }
 
     }

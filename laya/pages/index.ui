@@ -2,7 +2,7 @@
     "x":0,
     "type":"View",
     "selectedBox":1,
-    "selecteID":40,
+    "selecteID":44,
     "props":{"width":720,"sceneColor":"#ffffff","height":1280},
     "nodeParent":-1,
     "label":"View",
@@ -432,7 +432,7 @@
         {
             "x":15,
             "type":"Text",
-            "props":{"y":1194,"x":432,"var":"purchase_text","text":"1000","name":"purchase_text","fontSize":25,"font":"Arial","color":"#ffff00","bold":true},
+            "props":{"y":1189,"x":415,"width":155,"var":"purchase_text","text":"1.8888B","name":"purchase_text","height":25,"fontSize":30,"font":"Arial","color":"#653e21","bold":true},
             "nodeParent":1,
             "label":"Text(purchase_text)",
             "isDirectory":false,
@@ -441,7 +441,7 @@
             "compId":44,
             "child":[
                 ],
-            "$HIDDEN":true
+            "$HIDDEN":false
         },
         {
             "x":15,

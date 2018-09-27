@@ -43,7 +43,7 @@ var GAME;
                 this.position = { x: pos.x + (pos.width / 2 - this.icon.child.width / 2), y: pos.y };
             }
             else {
-                console.log("无法获取到主角的位置");
+                console.log("无法获取到主角的位置", this.pos);
                 this.icon.child.pos(-100, -100);
                 this.icon.parent.pos(-100, -100);
                 return;
@@ -55,6 +55,7 @@ var GAME;
                 if (target.name === "AnimationPool") {
                     if (adminPool.child >= adminPool.maxLength) {
                         console.log("已经满员了!");
+                        tips("最大不超过5个");
                         Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 350);
                     }
                     else {
@@ -104,6 +105,7 @@ var GAME;
                 role2: datas.id,
                 position: datas.pos,
             }, function (data) {
+                loveadmin(_this.stage, 500, { x: datas.position.x + 50, y: datas.position.y + 50 }); // 爱心动画
                 _this.delete();
                 datas.delete();
                 tips("升级成功");
@@ -116,9 +118,11 @@ var GAME;
                     cycle: data.cycle,
                 };
                 new GAME.lead(user, _this.stage);
-                Laya.stage.event("rolelevelSet", data.role_level); // 更新人物解锁等级
-                if (!!data.islock && data.islock === "2") {
+                if (!!data.role_level)
+                    Laya.stage.event("rolelevelSet", data.role_level); // 更新人物解锁等级
+                if (!!data.islock && data.islock === 2) {
                     console.log("人物解锁列表更新");
+                    _this.unlock(data.lockinfo, data.role_name);
                 }
             }, function (err) {
                 tips("升级失败");
@@ -208,15 +212,36 @@ var GAME;
                     tips(Format((_this.wages * _this.Multiple).toString()), "coin");
                 }, this.cycle);
                 // 更改总速度
-                Laya.stage.event("speedSet", this.wages / (this.cycle / 1000));
+                Laya.stage.event("speedSet", this.wages);
             }
             else if (type === "stop") {
                 window.clearInterval(this.Timer);
-                Laya.stage.event("speedSet", -this.wages / (this.cycle / 1000));
+                Laya.stage.event("speedSet", -this.wages);
             }
             else if (type === "replace") {
                 window.clearInterval(this.Timer);
             }
+        };
+        // 解锁新人物
+        lead.prototype.unlock = function (data, name) {
+            var targetUI = init_alert(ui.upgradeUI);
+            // 炫耀按钮
+            var btn = targetUI.getChildByName("content").getChildByName("shared");
+            addClick(btn, function () {
+                console.log("分享");
+            }, this);
+            // 花朵动画
+            var Flower = targetUI.getChildByName("content").getChildByName("Flower");
+            // scaleAdmin(Flower);
+            // 主角动画
+            var Lead = targetUI.getChildByName("content").getChildByName("Lead");
+            Lead.skin = "Lead/" + data.grade + ".png";
+            // scaleAdmin(Lead);
+            // 主角姓名
+            var LeadName = targetUI.getChildByName("content").getChildByName("LeadName");
+            LeadName.text = name;
+            // 更新商店解锁列表
+            Laya.stage.event("locklistUnlock", { type: 1, grade: data.grade, diamond: data.diamond, price: data.price });
         };
         // 回收
         lead.prototype.recovery = function () {
@@ -229,7 +254,7 @@ var GAME;
                 tips("回收成功");
                 Laya.stage.event("MoneySet", addition(window["___index"].GameInfo.coin, getLeadPrice(_this.grade)));
                 _this.delete();
-                LeadInfo.Leadlist -= 1;
+                // LeadInfo.Leadlist -= 1;
             }, function (err) {
                 tips("回收失败");
                 Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 350);
@@ -288,6 +313,7 @@ var GAME;
             this.AdminTimer = false; // 停止动画
             this.cointimer("stop");
             this.seat.leadClass = null;
+            LeadInfo.Leadlist -= 1;
         };
         return lead;
     }());

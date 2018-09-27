@@ -3,8 +3,12 @@ var GAME;
 (function (GAME) {
     var turntable = /** @class */ (function () {
         function turntable() {
+            this.GameInfo = 0; // 抽奖券
+            this.radices = 0; // 当前金币产生速度
         }
-        turntable.prototype.open = function () {
+        turntable.prototype.open = function (data) {
+            this.GameInfo = data.volum;
+            this.radices = data.speed;
             this.targetUI = init_alert(ui.LuckdrawUI);
             this.btn = this.targetUI.getChildByName("content").getChildByName("_btn"); // 按钮
             this.turntable = this.targetUI.getChildByName("content").getChildByName("_turntable"); // 转盘
@@ -18,17 +22,38 @@ var GAME;
         // 转盘开启
         turntable.prototype.event = function () {
             var _this = this;
-            // 请求结果 ——ajax
-            var self = this;
-            var Result = 0;
-            var title = "御花园偶遇皇上获得恩宠，奖赏3000金元宝";
-            var size = 100;
-            this.btn.once(Laya.Event.CLICK, this, function (e) {
-                _this.admin(_this.turntable, (8 - Result) * 45, Laya.Handler.create(_this, function () {
-                    _this.PropUI(Result, title, size, function () {
-                        self.turntable.rotation = 0;
-                    }); // 奖励特效
-                }));
+            this.updatevoluce();
+            if (this.GameInfo <= 0) {
+                tips("抽奖券不足够");
+                return;
+            }
+            Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/choujiang.php", {
+                openid: LeadInfo.openID,
+                radices: this.radices
+            }, function (data) {
+                console.log(data);
+                var self = _this;
+                var Result = Number(data.award) - 1; // 类型
+                var title = data["content"]; // 剧情文本
+                // let size = 100;
+                // 按钮事件
+                _this.btn.once(Laya.Event.CLICK, _this, function (e) {
+                    _this.admin(_this.turntable, (8 - Result) * 45, Laya.Handler.create(_this, function () {
+                        // 奖励特效界面
+                        _this.PropUI(Result, title, function () {
+                            self.turntable.rotation = 0; // 转盘还原
+                            Laya.stage.event("volumAdd", -1);
+                            self.updatevoluce();
+                            Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/getaward.php", {
+                                openid: LeadInfo.openID,
+                                rid: data.rid
+                            });
+                            _this.propui = null;
+                        });
+                    }));
+                });
+            }, function (err) {
+                tips("暂时无法抽奖");
             });
         };
         // 转盘动画
@@ -39,9 +64,11 @@ var GAME;
             Laya.Tween.to(target, { rotation: angles }, time, Laya.Ease.expoOut, callback, null);
         };
         // 道具界面特效
-        turntable.prototype.PropUI = function (type, title, size, callback) {
+        turntable.prototype.PropUI = function (type, title, callback) {
             if (callback === void 0) { callback = null; }
             var self = this;
+            if (!!this.propui)
+                return;
             var targetUI = init_alert(ui.rewardUI, null, function () {
                 window.clearInterval(time);
                 self.event();
@@ -49,11 +76,12 @@ var GAME;
                     callback();
                 // 通知服务器该玩家已经领取奖励
             });
+            this.propui = targetUI;
             // 旋转光效
             var Light = targetUI.getChildByName("content").getChildByName("Light");
             var time = window.setInterval(function () {
                 Light.rotation += 10;
-            }, 100);
+            }, 50);
             var Textarea = targetUI.getChildByName("content").getChildByName("Textarea"); // 文本区
             var reward = targetUI.getChildByName("content").getChildByName("reward"); // 数量文本
             switch (type) {
@@ -64,7 +92,8 @@ var GAME;
                     target.visible = true;
                     img.visible = true;
                     scaleAdmin(target);
-                    reward.text = "\u606D\u559C\u60A8\u83B7\u5F97\u91D1\u5143\u5B9D" + size + "\u4E2A";
+                    reward.text = "\u606D\u559C\u60A8\u83B7\u5F97\u91D1\u5143\u5B9D" + 3 + "\u4E2A";
+                    Laya.stage.event("diamondsAdd", 3);
                     // 处理字体
                     fontAdmin(title.slice(0, 15), 0, Textarea.width * 0.65, 50, 40, Textarea); // 右边文字
                     fontAdmin(title.slice(15, title.length), 0, Textarea.width * 0.15, 50, 40, Textarea); // 左边文字
@@ -76,7 +105,8 @@ var GAME;
                     coin.visible = true;
                     coin.pos(-76, -245);
                     Textarea.visible = false;
-                    reward.text = "\u606D\u559C\u60A8\u83B7\u5F97\u91D1\u5E01" + size + "\u4E2A";
+                    reward.text = "\u606D\u559C\u60A8\u83B7\u5F97\u91D1\u5E01" + Format((self.radices * 2).toString()) + "\u4E2A";
+                    Laya.stage.event("MoneyAdd", self.radices * 2);
                     break;
                 case 2:
                     // 太监
@@ -85,7 +115,7 @@ var GAME;
                     target.visible = true;
                     img.visible = true;
                     scaleAdmin(target);
-                    reward.text = "\u60A8\u8D4F\u8D50\u592A\u76D1\u603B\u7BA1" + size + "\u4E2A\u91D1\u5E01";
+                    reward.text = "\u60A8\u8D4F\u8D50\u592A\u76D1\u603B\u7BA1" + Format((self.radices).toString()) + "\u4E2A\u91D1\u5E01";
                     // 处理字体
                     fontAdmin(title.slice(0, 15), 0, Textarea.width * 0.65, 50, 40, Textarea); // 右边文字
                     fontAdmin(title.slice(15, title.length), 0, Textarea.width * 0.15, 50, 40, Textarea); // 左边文字
@@ -97,7 +127,8 @@ var GAME;
                     coin.visible = true;
                     coin.pos(-76, -245);
                     Textarea.visible = false;
-                    reward.text = "\u606D\u559C\u60A8\u83B7\u5F97\u91D1\u5E01" + size + "\u4E2A";
+                    reward.text = "\u606D\u559C\u60A8\u83B7\u5F97\u91D1\u5E01" + Format((self.radices * 3).toString()) + "\u4E2A";
+                    Laya.stage.event("MoneyAdd", self.radices * 3);
                     break;
                 case 4:
                     // 皇后
@@ -106,7 +137,8 @@ var GAME;
                     target.visible = true;
                     img.visible = true;
                     scaleAdmin(target);
-                    reward.text = "\u606D\u559C\u60A8\u83B7\u5F97" + size + "\u4E2A\u91D1\u5143\u5B9D";
+                    reward.text = "\u606D\u559C\u60A8\u83B7\u5F97" + 2 + "\u4E2A\u91D1\u5143\u5B9D";
+                    Laya.stage.event("diamondsAdd", 2);
                     // 处理字体
                     fontAdmin(title.slice(0, 15), 0, Textarea.width * 0.65, 50, 40, Textarea); // 右边文字
                     fontAdmin(title.slice(15, title.length), 0, Textarea.width * 0.15, 50, 40, Textarea); // 左边文字
@@ -119,6 +151,7 @@ var GAME;
                     coin.pos(-76, -245);
                     Textarea.visible = false;
                     reward.text = "\u606D\u559C\u60A8\u83B7\u5F97\u62BD\u5956\u5238" + 3 + "\u5F20";
+                    Laya.stage.event("volumAdd", 3);
                     break;
                 case 6:
                     // 太后
@@ -127,7 +160,8 @@ var GAME;
                     target.visible = true;
                     img.visible = true;
                     scaleAdmin(target);
-                    reward.text = "\u606D\u559C\u60A8\u83B7\u5F97" + size + "\u4E2A\u91D1\u5143\u5B9D";
+                    reward.text = "\u606D\u559C\u60A8\u83B7\u5F97" + 1 + "\u4E2A\u91D1\u5143\u5B9D";
+                    Laya.stage.event("diamondsAdd", 1);
                     // 处理字体
                     fontAdmin(title.slice(0, 15), 0, Textarea.width * 0.65, 50, 40, Textarea); // 右边文字
                     fontAdmin(title.slice(15, title.length), 0, Textarea.width * 0.15, 50, 40, Textarea); // 左边文字
@@ -139,12 +173,18 @@ var GAME;
                     coin.visible = true;
                     coin.pos(-76, -245);
                     Textarea.visible = false;
-                    reward.text = "\u606D\u559C\u60A8\u83B7\u5F97\u91D1\u5E01" + size + "\u4E2A";
+                    reward.text = "\u606D\u559C\u60A8\u83B7\u5F97\u91D1\u5E01" + Format((self.radices).toString()) + "\u4E2A";
+                    Laya.stage.event("MoneyAdd", self.radices);
                     break;
                 default:
                     console.log("道具界面 类型错误");
                     break;
             }
+        };
+        // 刷新抽奖券的显示
+        turntable.prototype.updatevoluce = function () {
+            var text = this.targetUI.getChildByName("content").getChildByName("Lottery");
+            text.text = window["GameInfo"].volum;
         };
         return turntable;
     }());

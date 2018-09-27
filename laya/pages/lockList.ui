@@ -2,7 +2,7 @@
     "x":0,
     "type":"Dialog",
     "selectedBox":6,
-    "selecteID":13,
+    "selecteID":19,
     "props":{"width":750,"sceneColor":"#ffffff","height":1280},
     "nodeParent":-1,
     "label":"Dialog",
@@ -40,7 +40,7 @@
                 {
                     "x":30,
                     "type":"List",
-                    "props":{"y":174,"x":47,"var":"_list","spaceY":50,"spaceX":20,"repeatY":4,"repeatX":1,"name":"_list"},
+                    "props":{"y":91,"x":46,"width":474,"var":"_list","spaceY":25,"spaceX":20,"repeatY":5,"repeatX":1,"name":"_list","height":859},
                     "nodeParent":3,
                     "label":"List(_list)",
                     "isOpen":true,
@@ -170,7 +170,7 @@
                                         {
                                             "x":75,
                                             "type":"Text",
-                                            "props":{"y":19,"x":49,"width":67,"var":"btn_coin_text","valign":"middle","text":"1000B","overflow":"hidden","name":"btn_coin_text","height":29,"fontSize":18,"font":"Arial","color":"#653e21","bold":true,"align":"center"},
+                                            "props":{"y":19,"x":38,"width":81,"var":"btn_coin_text","valign":"middle","text":"1.8888B","overflow":"hidden","name":"btn_coin_text","height":29,"fontSize":18,"font":"Arial","color":"#653e21","bold":true,"align":"center"},
                                             "nodeParent":19,
                                             "label":"Text(btn_coin_text)",
                                             "isDirectory":false,
@@ -210,7 +210,7 @@
                                         {
                                             "x":75,
                                             "type":"Text",
-                                            "props":{"y":20,"x":51,"width":67,"var":"btn_yuanbao_text","valign":"middle","text":"1000B","overflow":"hidden","name":"btn_yuanbao_text","height":29,"fontSize":18,"font":"Arial","color":"#653e21","bold":true,"align":"center"},
+                                            "props":{"y":20,"x":44,"width":77,"var":"btn_yuanbao_text","valign":"middle","text":"1.888B","overflow":"hidden","name":"btn_yuanbao_text","height":29,"fontSize":18,"font":"Arial","color":"#653e21","bold":true,"align":"center"},
                                             "nodeParent":22,
                                             "label":"Text(btn_yuanbao_text)",
                                             "isDirectory":false,
@@ -268,7 +268,7 @@
                 {
                     "x":30,
                     "type":"Image",
-                    "props":{"y":106,"x":82,"width":45,"skin":"index/copper2.png","height":45},
+                    "props":{"y":106,"x":82,"width":45,"visible":false,"skin":"index/copper2.png","height":45},
                     "nodeParent":3,
                     "label":"Image",
                     "isDirectory":false,
@@ -281,7 +281,7 @@
                 {
                     "x":30,
                     "type":"Text",
-                    "props":{"y":112,"x":132,"var":"coin","text":"1000B","name":"coin","fontSize":30,"font":"Arial","color":"#653e21","bold":true},
+                    "props":{"y":112,"x":132,"visible":false,"var":"coin","text":"1000B","name":"coin","fontSize":30,"font":"Arial","color":"#653e21","bold":true},
                     "nodeParent":3,
                     "label":"Text(coin)",
                     "isDirectory":false,
@@ -294,7 +294,7 @@
                 {
                     "x":30,
                     "type":"Image",
-                    "props":{"y":113,"x":325,"skin":"index/yuanbao.png"},
+                    "props":{"y":113,"x":325,"visible":false,"skin":"index/yuanbao.png"},
                     "nodeParent":3,
                     "label":"Image",
                     "isDirectory":false,
@@ -307,7 +307,7 @@
                 {
                     "x":30,
                     "type":"Text",
-                    "props":{"y":111,"x":384,"width":88.4033203125,"var":"yuanbao","text":"1000B","name":"yuanbao","height":30,"fontSize":30,"font":"Arial","color":"#653e21","bold":true},
+                    "props":{"y":111,"x":384,"width":88.4033203125,"visible":false,"var":"yuanbao","text":"1000B","name":"yuanbao","height":30,"fontSize":30,"font":"Arial","color":"#653e21","bold":true},
                     "nodeParent":3,
                     "label":"Text(yuanbao)",
                     "isDirectory":false,

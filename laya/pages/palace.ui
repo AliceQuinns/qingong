@@ -1,8 +1,8 @@
 {
     "x":0,
     "type":"Dialog",
-    "selectedBox":8,
-    "selecteID":10,
+    "selectedBox":10,
+    "selecteID":12,
     "props":{"y":0,"x":0,"width":750,"sceneColor":"#ffffff","height":1280},
     "nodeParent":-1,
     "label":"Dialog",
@@ -72,7 +72,8 @@
                                     "hasChild":false,
                                     "compId":6,
                                     "child":[
-                                        ]
+                                        ],
+                                    "$HIDDEN":true
                                 },
                                 {
                                     "x":60,
@@ -80,12 +81,40 @@
                                     "props":{"y":0,"x":1,"visible":false,"var":"Unlock","skin":"index/unlock_bg.png","name":"Unlock"},
                                     "nodeParent":8,
                                     "label":"Image(Unlock)",
-                                    "isDirectory":false,
+                                    "isOpen":true,
+                                    "isDirectory":true,
                                     "isAniNode":false,
-                                    "hasChild":false,
+                                    "hasChild":true,
                                     "compId":10,
                                     "child":[
-                                        ],
+                                        {
+                                            "x":75,
+                                            "type":"Image",
+                                            "props":{"y":75,"x":92,"width":71,"var":"Lead","skin":"Enemy/1.png","name":"Lead","height":94},
+                                            "nodeParent":10,
+                                            "label":"Image(Lead)",
+                                            "isDirectory":false,
+                                            "isAniNode":false,
+                                            "hasChild":false,
+                                            "compId":11,
+                                            "child":[
+                                                ],
+                                            "$HIDDEN":false
+                                        },
+                                        {
+                                            "x":75,
+                                            "type":"Text",
+                                            "props":{"y":56,"x":59,"wordWrap":true,"width":31,"var":"Leadname","valign":"middle","text":"容嬷嬷","strokeColor":"#dbbea9","stroke":2,"overflow":"visible","name":"Leadname","height":132,"fontSize":25,"font":"Arial","color":"#653e21","bold":true,"align":"center"},
+                                            "nodeParent":10,
+                                            "label":"Text(Leadname)",
+                                            "isOpen":true,
+                                            "isDirectory":false,
+                                            "isAniNode":false,
+                                            "hasChild":false,
+                                            "compId":12,
+                                            "child":[
+                                                ]
+                                        }],
                                     "$HIDDEN":false
                                 }],
                             "$HIDDEN":false

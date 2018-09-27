@@ -11,7 +11,7 @@ module GAME {
             userid: "0",// 玩家id
             coin: "0",// 金币
             diamonds: "0",// 元宝
-            volum: "0",// 奖券
+            volum: 0,// 奖券
             speed: 0,// 当前总速度
             grade: 1,// 用户等级
             role_level: 1,// 人物的解锁等级
@@ -24,15 +24,24 @@ module GAME {
 
         constructor() {
             Laya.loader.load([
-                "res/atlas/index.atlas",
-                "https://shop.yunfanshidai.com/xcxht/qinggong/res/Lead.atlas",
-                "https://shop.yunfanshidai.com/xcxht/qinggong/res/Enemy.atlas",
-            ], Laya.Handler.create(this, this.init));
+                "https://shop.yunfanshidai.com/xcxht/qinggong/res/atlas/index.atlas",
+                "https://shop.yunfanshidai.com/xcxht/qinggong/res/atlas/Lead.atlas",
+                "https://shop.yunfanshidai.com/xcxht/qinggong/res/atlas/Enemy.atlas",
+            ], Laya.Handler.create(this, this.init), Laya.Handler.create(this, this.onProgress, null, false));
 
             window["___index"] = this;
+            window["GameInfo"] = this.GameInfo;
+        }
+
+        private onProgress(pro: number): void {
+            let bar2 = window["loginUI"].getChildByName("bar2");
+            bar2.scale(pro, 1);
         }
 
         private init(): void {
+            window.setTimeout(() => {
+                window["loginUI"].destroy();
+            }, 500);
 
             // 场景添加
             this.indexUI = new ui.indexUI;
@@ -80,20 +89,30 @@ module GAME {
                     (!!data.rolelist) ? this.Lead(data.rolelist) : console.log("无法获取主角信息");
 
                     // 冷宫列表
-                    (!!data.lglist) ? LeadInfo.palaceList = data.lglist : console.log("无法获取冷宫列表");
+                    // (!!data.lglist) ? LeadInfo.palaceList = data.lglist : console.log("无法获取冷宫列表");
 
                     // 商店列表
                     (!!data.lockinfo) ? LeadInfo.locklist = data.lockinfo : console.log("无法获取商店列表");
 
                     this.turntable = new GAME.turntable();// 转盘模块
                     this.shop = new GAME.shop(LeadInfo.locklist);// 商店模块
-                    this.palace = new GAME.palace(LeadInfo.palaceList);// 冷宫模块
+
+                    this.palace = new GAME.palace();// 冷宫模块
 
                     this.event();// 事件监听
+
+                    this.updateshopBtn();// 更新购买按钮价格
+
+                    window["_audio"].onBGM();
 
                     // 定时更新服务器金币
                     window.setInterval(() => {
                         Laya.stage.event("updateCoin");
+                    }, 30000);
+
+                    // 抽奖券
+                    window.setInterval(() => {
+                        Laya.stage.event("volumAdd", 1);
                     }, 30000);
                 }
             }, err => {
@@ -118,7 +137,7 @@ module GAME {
             }, this);
             // 抽奖
             addClick(this.indexUI.turntable, () => {
-                this.turntable.open();
+                this.turntable.open(this.GameInfo);
             }, this);
             // 商店
             addClick(this.indexUI.shop, () => {
@@ -128,6 +147,10 @@ module GAME {
             addClick(this.indexUI.purchase, () => {
                 this.leadshop();
             })
+            // 回收按钮
+            addClick(this.indexUI.recovery, () => {
+                tips("请拖动人物到此处");
+            }, this, true)
         }
 
         // 自定事件
@@ -147,6 +170,7 @@ module GAME {
             Laya.stage.on("MoneyAdd", this, e => {
                 this.GameInfo.coin = addition(this.GameInfo.coin, String(e));
                 this._Money.text = Format(this.GameInfo.coin);
+                window["_audio"]._Sound("money");
             })
             // 减少金币
             Laya.stage.on("MoneyReduce", this, e => {
@@ -172,12 +196,10 @@ module GAME {
 
             // 添加抽奖券
             Laya.stage.on("volumAdd", this, e => {
-
+                this.GameInfo.volum += Number(e);
+                if (this.GameInfo.volum >= 50) this.GameInfo.volum = 50;
             })
-            // 减少抽奖券
-            Laya.stage.on("volumReduce", this, e => {
 
-            })
             // 更新商店价格
             Laya.stage.on("locklistSet", this, e => {
                 if (!e.grade || !e.value) { console.error("更新商店价格出错"); return; }
@@ -186,19 +208,36 @@ module GAME {
                         item.price = e.value;
                     }
                 })
+                this.updateshopBtn();//更改快速购买显示价格
+            });
+
+            // 更新商店解锁信息
+            Laya.stage.on("locklistUnlock", this, e => {
+                if (!e.grade || !e.price) { console.error("更新解锁等级时出错"); return; }
+                LeadInfo.locklist.forEach((item, index) => {
+                    if (item.grade === String(e.grade)) {
+
+                        item.price = e.price;
+                        item.type = 1;
+                        if (!!e.diamond) item.diamond = e.diamond;
+
+                    }
+                })
             })
+
             // 更新玩家解锁等级
             Laya.stage.on("rolelevelSet", this, e => {
                 if (!!e) this.GameInfo.role_level = e;
                 console.log("更新人物解锁等级为", e);
             })
 
-            // 更新服务器金币
+            // 更新服务器数据信息
             Laya.stage.on("updateCoin", this, e => {
                 Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/updateOutLine.php", {
                     openid: LeadInfo.openID,
                     coin: this.GameInfo.coin,
-                    timestamp: Date.parse(new Date().toString())
+                    timestamp: Date.parse(new Date().toString()),
+                    volum: this.GameInfo.volum
                 }, data => {
                     console.log("已经更新服务器金币数据");
                 }, err => {
@@ -209,8 +248,13 @@ module GAME {
             // 金币速度更改
             Laya.stage.on("speedSet", this, e => {
                 this.GameInfo.speed += e;
-                if(this.GameInfo.speed<=0)this.GameInfo.speed = 0;
+                if (this.GameInfo.speed <= 0) this.GameInfo.speed = 0;
                 this._coinspeed.text = `${Format(Math.floor(this.GameInfo.speed).toString())}/秒`;
+            })
+
+            // 创建新主角
+            Laya.stage.on("LeadCreate", this, e => {
+                new GAME.lead(e, this.indexUI);
             })
         }
 
@@ -224,13 +268,31 @@ module GAME {
             }
         }
 
+        // 更新快速购买按钮价格
+        private updateshopBtn() {
+            let Leadprice = 0;// 当前主角价格
+            LeadInfo.locklist.forEach((item, index) => {
+                if (item.grade === String(this.GameInfo.role_level)) {
+                    Leadprice = item.price;
+                }
+            });
+            this.indexUI.purchase_text.text = Format(String(Leadprice));
+        }
+
         // 主角购买
         private leadshop() {
+            let Leadprice = 0;// 当前主角价格
+            LeadInfo.locklist.forEach((item, index) => {
+                if (item.grade === String(this.GameInfo.role_level)) {
+                    Leadprice = item.price;
+                }
+            })
+
             if (LeadInfo.Leadlist >= 12) {
                 tips("后宫已满");
                 return;
             }
-            if (this.GameInfo.coin === "0") {
+            if (this.GameInfo.coin === "0" || !ContrastNumber(this.GameInfo.coin, Leadprice)) {
                 tips("金币不足");
                 return;
             }
@@ -253,6 +315,8 @@ module GAME {
                 // 用户剩余金币
                 var coin = data.coin;
                 Laya.stage.event("MoneySet", coin);
+
+                this.updateshopBtn();// 更新价格
 
                 tips("购买成功");
             }, err => {

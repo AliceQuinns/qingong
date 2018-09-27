@@ -1,8 +1,8 @@
 {
     "x":0,
     "type":"Dialog",
-    "selectedBox":1,
-    "selecteID":19,
+    "selectedBox":4,
+    "selecteID":18,
     "props":{"width":750,"sceneColor":"#ffffff","height":1280},
     "nodeParent":-1,
     "label":"Dialog",
@@ -121,9 +121,9 @@
                 {
                     "x":30,
                     "type":"Text",
-                    "props":{"y":241,"x":-41,"text":"50","fontSize":30,"font":"Arial","color":"#ff3200","bold":true},
+                    "props":{"y":241,"x":-41,"var":"Lottery","text":"50","name":"Lottery","fontSize":30,"font":"Arial","color":"#ff3200","bold":true},
                     "nodeParent":4,
-                    "label":"Text",
+                    "label":"Text(Lottery)",
                     "isDirectory":false,
                     "isAniNode":true,
                     "hasChild":false,
