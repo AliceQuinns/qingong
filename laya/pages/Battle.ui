@@ -28,7 +28,7 @@
         {
             "x":15,
             "type":"Image",
-            "props":{"y":667,"x":347,"var":"content","skin":"index/duizhan_bg.png","name":"content","anchorY":0.5,"anchorX":0.5},
+            "props":{"y":667,"x":347,"width":451,"var":"content","name":"content","height":737,"anchorY":0.5,"anchorX":0.5},
             "nodeParent":1,
             "label":"Image(content)",
             "isOpen":true,
@@ -39,8 +39,21 @@
             "child":[
                 {
                     "x":30,
+                    "type":"Image",
+                    "props":{"y":1,"x":45,"skin":"index/name_bg.png"},
+                    "nodeParent":3,
+                    "label":"Image",
+                    "isDirectory":false,
+                    "isAniNode":true,
+                    "hasChild":false,
+                    "compId":19,
+                    "child":[
+                        ]
+                },
+                {
+                    "x":30,
                     "type":"Text",
-                    "props":{"y":70,"x":13,"width":416,"var":"Leadname","text":"容嬷嬷","name":"Leadname","height":50,"fontSize":50,"font":"Arial","color":"#653e21","bold":true,"align":"center"},
+                    "props":{"y":14,"x":46,"width":361,"var":"Leadname","text":"容嚒嚒","overflow":"hidden","name":"Leadname","height":50,"fontSize":50,"font":"Arial","color":"#653e21","bold":true,"align":"center"},
                     "nodeParent":3,
                     "label":"Text(Leadname)",
                     "isDirectory":false,
@@ -53,7 +66,7 @@
                 {
                     "x":30,
                     "type":"Image",
-                    "props":{"y":175,"x":131,"var":"Lead","skin":"Enemy/10.png","name":"Lead"},
+                    "props":{"y":300,"x":225,"var":"Lead","skin":"Enemy/10.png","name":"Lead","anchorY":0.5,"anchorX":0.5},
                     "nodeParent":3,
                     "label":"Image(Lead)",
                     "isDirectory":false,
@@ -66,7 +79,7 @@
                 {
                     "x":30,
                     "type":"Text",
-                    "props":{"y":496,"x":141,"wordWrap":true,"width":255,"var":"textcont","valign":"middle","text":"赏赐对方5个巴掌可获得500金币","overflow":"hidden","name":"textcont","height":159,"fontSize":30,"font":"Arial","color":"#653e21","bold":true,"align":"center"},
+                    "props":{"y":577,"x":141,"wordWrap":true,"width":255,"var":"textcont","valign":"middle","text":"赏赐对方5个巴掌可获得500金币","overflow":"hidden","name":"textcont","height":159,"fontSize":30,"font":"Arial","color":"#e6ef0b","bold":true,"align":"center"},
                     "nodeParent":3,
                     "label":"Text(textcont)",
                     "isDirectory":false,
@@ -79,7 +92,7 @@
                 {
                     "x":30,
                     "type":"Image",
-                    "props":{"y":543,"x":79,"skin":"index/hand.png"},
+                    "props":{"y":622,"x":79,"skin":"index/hand.png"},
                     "nodeParent":3,
                     "label":"Image",
                     "isDirectory":false,
@@ -112,6 +125,19 @@
                     "isAniNode":true,
                     "hasChild":false,
                     "compId":17,
+                    "child":[
+                        ]
+                },
+                {
+                    "x":30,
+                    "type":"Image",
+                    "props":{"y":576,"x":53,"skin":"index/biankuang.png"},
+                    "nodeParent":3,
+                    "label":"Image",
+                    "isDirectory":false,
+                    "isAniNode":true,
+                    "hasChild":false,
+                    "compId":20,
                     "child":[
                         ]
                 }]

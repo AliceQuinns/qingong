@@ -2,6 +2,7 @@
 module GAME {
     export class palace {
         private enemy;// 敌人弹框
+        private bazdir = true;// 巴掌方向
         constructor() {
 
         }
@@ -13,6 +14,7 @@ module GAME {
                 openid: LeadInfo.openID
             }, data => {
                 console.log(data);
+                if (data.status === "fail") { tips("冷宫还未解锁"); return; }
                 if (data.enemylist.length <= 0) {
                     tips("暂时没有敌人");
                 } else {
@@ -70,52 +72,38 @@ module GAME {
             Lead.skin = `Enemy/${data.level}.png`;
 
             let textcont = this.enemy.getChildByName("content").getChildByName("textcont") as Laya.Text;
-            textcont.text = `赏赐${data.Leadname}5个巴掌 即可获得${Format(data.coin)}个金币`;
+            textcont.text = `每赏赐${data.Leadname}1个巴掌 即可获得${Format(data.coin)}个金币`;
 
             addClick(Lead, () => {
-                console.log(data.coin);
+
                 this.BattleAnimation(Lead, data.coin);
+
             }, this);
         }
 
         // 战斗动画
         private BattleAnimation(pos, money) {
-            var skeleton: Laya.Skeleton = new Laya.Skeleton();
+            // 短震动
+            shock(1);
 
-            pos.addChild(skeleton);
-            skeleton.pos(pos.x, pos.y + 50);
+            // 攻击动画
+            attackadmin(pos, 100, { x: pos.x - pos.width / 2, y: pos.y - pos.height / 2 }, 0.01, this.bazdir);
+            this.bazdir = !this.bazdir;
 
-            skeleton.load("https://shop.yunfanshidai.com/xcxht/qinggong/res/animation/hand.sk");
+            // 窗口抖动
+            windowshack(2, 1, 300);
 
-            // 战斗抖动
-            var x = 10;
-            var y = 10;
-            let time = window.setInterval(() => {
-                Laya.stage.x += x;
-                Laya.stage.y += y;
-                x = -x;
-                y = -y;
-            }, 10);
+            // 收益提示
+            tips(`${Format(money)}金币`, "coin", pos.x + pos.width * Math.random(), pos.y + pos.height * Math.random(), 200);
 
-            var times;
+            // 金币增加
+            Laya.stage.event("MoneyAdd", money);
 
-            window.setTimeout(() => {
-                Laya.stage.pos(0, 0);
-                skeleton.destroy();
-                window.clearInterval(time);
-                let _targetUI = init_alert(ui.reward2UI, () => {
-                    // 旋转光效
-                    let Light = _targetUI.getChildByName("content").getChildByName("Light") as Laya.Image;
-                    times = window.setInterval(() => {
-                        Light.rotation += 10;
-                    }, 50);
-                }, () => {
-                    Laya.stage.event("MoneyAdd", money);
-                    tips(`已获得${Format(money)} 金币`);
-                    window.clearInterval(times);
-                });
-            }, 3000);
+            // 主角缩放
+            scaleelastic(pos);
 
+            // 巴掌音效
+            window["_audio"]._Sound("slap");
         }
 
     }

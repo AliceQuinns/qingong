@@ -3,8 +3,8 @@ var _this = this;
 var collision = [];
 // 主角信息
 var LeadInfo = {
-    width: 90,
-    height: 125,
+    width: 96,
+    height: 135,
     openID: 0,
     locklist: [],
     palaceList: [],
@@ -16,6 +16,24 @@ var adminPool = {
     child: 0,
     maxLength: 5,
 };
+// 邀请好友奖励列表
+var shareddata = [
+    { size: 1, jinyunbao: 10 },
+    { size: 2, jinyunbao: 15 },
+    { size: 3, jinyunbao: 20 },
+    { size: 4, jinyunbao: 25 },
+    { size: 5, jinyunbao: 30 },
+];
+// 签到奖励 1: 抽奖券 2: 金元宝
+var signdays = [
+    { day: 1, type: false, Prop: { type: 1, size: 4, title: "恭喜你获得4个抽奖券" } },
+    { day: 2, type: false, Prop: { type: 2, size: 2, title: "恭喜你获得2个金元宝" } },
+    { day: 3, type: false, Prop: { type: 1, size: 6, title: "恭喜你获得6个抽奖券" } },
+    { day: 4, type: false, Prop: { type: 2, size: 4, title: "恭喜你获得4个金元宝" } },
+    { day: 5, type: false, Prop: { type: 1, size: 10, title: "恭喜你获得10个抽奖券" } },
+    { day: 6, type: false, Prop: { type: 2, size: 6, title: "恭喜你获得6个金元宝" } },
+    { day: 7, type: false, Prop: { type: 1, size: 8, title: "恭喜你获得4个抽奖券" } },
+];
 var Ajax = function (type, url, data, success, failed) {
     if (success === void 0) { success = null; }
     if (failed === void 0) { failed = null; }
@@ -52,7 +70,7 @@ var Ajax = function (type, url, data, success, failed) {
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
             if (xhr.status == 200) {
-                if (!!xhr.responseText)
+                if (!!xhr.responseText && !!success)
                     success(JSON.parse(xhr.responseText));
             }
             else {
@@ -120,7 +138,7 @@ var drag = function (element, callback) {
             }
             if (!isCollision) {
                 console.log("未发生任何碰撞 自动返回初始位置");
-                Laya.Tween.to(element, { x: position.x, y: position.y }, 500);
+                Laya.Tween.to(element, { x: position.x, y: position.y }, 100);
             }
         }
         else {
@@ -178,6 +196,7 @@ var init_alert = function (type, create_handler, clear_handler, close) {
         if (!!clear_handler && clear_handler instanceof Function)
             clear_handler(); //关闭窗口时执行
         type_obj._close();
+        type_obj.close_Btn.offAll(Laya.Event.CLICK);
     });
     type_obj.zOrder = 100;
     return type_obj;
@@ -206,6 +225,31 @@ var scaleAdmin = function (target) {
     setTimeout(function () {
         Laya.Tween.to(target, { alpha: 1, scaleX: 1, scaleY: 1 }, 500, Laya.Ease.backInOut, null, null);
     }, 500);
+};
+// 获得道具弹窗 1: 抽奖券 2: 金元宝 3: 金币
+var Propalert = function (type, text) {
+    if (text === void 0) { text = ""; }
+    var time;
+    var targetUI = init_alert(ui.reward2UI, null, function () {
+        window.clearInterval(time);
+    });
+    var proptype = targetUI.getChildByName("content").getChildByName("proptype");
+    var Light = targetUI.getChildByName("content").getChildByName("Light");
+    var reward = targetUI.getChildByName("content").getChildByName("reward");
+    reward.text = text;
+    if (type === 1) {
+        proptype.skin = "index/jiangquan.png";
+        proptype.pos(-32, -232);
+    }
+    else if (type === 2) {
+        proptype.skin = "index/yuanb.png";
+    }
+    else if (type === 3) {
+        proptype.skin = "index/money.png";
+    }
+    time = window.setInterval(function () {
+        Light.rotation += 10;
+    }, 50);
 };
 // 点击事件
 var addClick = function (btn, func, caller, removeAll, args) {
@@ -259,7 +303,7 @@ var createLetter = function (char, font, color, size) {
     return letter;
 };
 // 计数法
-var count = { 3: "K", 6: "M", 9: "B", 12: "T", 15: "AA", 18: "AB", 21: "AC", 24: "AD" };
+var count = { 3: "K", 6: "M", 9: "B", 12: "T", 15: "aa", 18: "ab", 21: "ac", 24: "ad", 27: "ae", 30: "af" };
 // 超大数值加法运算
 var addition = function (a, b) {
     var res = '', temp = 0;
@@ -328,38 +372,57 @@ var ContrastNumber = function (a, b) {
         return true;
     return Boolean(aMaxb);
 };
+// 超大数值乘法
+var accMul = function (arg1, arg2) {
+    var m = 0, s1 = arg1.toString(), s2 = arg2.toString();
+    try {
+        m += s1.split(".")[1].length;
+    }
+    catch (e) { }
+    try {
+        m += s2.split(".")[1].length;
+    }
+    catch (e) { }
+    return Number(s1.replace(".", "")) * Number(s2.replace(".", "")) / Math.pow(10, m);
+};
 // 数值格式化
 var Format = function (value) {
-    var text = value;
+    var a = value;
+    var b;
     for (var i in count) {
-        if (value.length > Number(i)) {
-            text = value.slice(0, 1) + "." + value.slice(1, 5) + count[i];
+        var ii = Number(i);
+        if (a.length - 1 >= ii) {
+            b = a.slice(0, a.length - ii) + "." + a.slice(a.length - ii, a.length - ii + 2) + count[ii];
         }
     }
-    return text;
+    ;
+    if (!b)
+        return a;
+    return b;
 };
 // 提示弹框
-var tips = function (msg, type, x, y) {
+var tips = function (msg, type, x, y, zOrder) {
     if (type === void 0) { type = null; }
-    if (x === void 0) { x = null; }
-    if (y === void 0) { y = null; }
+    if (x === void 0) { x = 300; }
+    if (y === void 0) { y = 170; }
+    if (zOrder === void 0) { zOrder = 99; }
     if (!!type && type === "coin") {
         var bg = new Laya.Image("index/copper2.png");
-        bg.x = 300;
-        bg.y = 170;
-        bg.width = 50;
-        bg.height = 50;
+        bg.x = x;
+        bg.y = y;
+        bg.width = 30;
+        bg.height = 30;
         bg.anchorX = 0.5;
         bg.anchorY = 0.5;
         bg.alpha = 1;
         var text = new Laya.Label("+ " + msg);
-        text.fontSize = 30;
-        text.color = "#653e21";
-        text.x = 60;
-        text.y = 10;
+        text.fontSize = 20;
+        text.color = "#ffffff";
+        text.x = 40;
+        text.y = 2;
         text.bold = true;
         bg.addChild(text);
-        bg.zOrder = 99;
+        bg.zOrder = zOrder;
         Laya.stage.addChild(bg);
         Laya.Tween.to(bg, { y: 90, alpha: 0 }, 1500, Laya.Ease.strongInOut, Laya.Handler.create(_this, function (obj) {
             Laya.timer.once(1000, this, function (arg) {
@@ -402,14 +465,87 @@ var getLeadPrice = function (grade) {
     });
     return target;
 };
+// 震动 1 短 2 长
+var shock = function (type) {
+    if (!window["wx"])
+        return;
+    if (type === 1) {
+        window["wx"].vibrateShort();
+    }
+    else if (type === 2) {
+        window["wx"].vibrateLong();
+    }
+};
 // 爱心动画
-var loveadmin = function (target, time, pos) {
+var loveadmin = function (target, time, pos, playback) {
+    if (playback === void 0) { playback = 1; }
     var skeleton = new Laya.Skeleton();
+    skeleton.playbackRate(playback);
     target.addChild(skeleton);
     skeleton.pos(pos.x, pos.y);
-    skeleton.load("https://shop.yunfanshidai.com/xcxht/qinggong/res/animation/love.sk");
+    skeleton.load("https://shop.yunfanshidai.com/xcxht/qinggong/res/animation/aixng/love.sk");
     window.setTimeout(function () {
         skeleton.destroy();
     }, time);
+};
+// 攻击动画
+var attackadmin = function (target, time, pos, playback, direction) {
+    if (playback === void 0) { playback = 1; }
+    if (direction === void 0) { direction = true; }
+    var skeleton = new Laya.Skeleton();
+    skeleton.playbackRate(playback);
+    target.addChild(skeleton);
+    skeleton.pos(pos.x, pos.y);
+    if (!direction)
+        skeleton.scaleX = -1;
+    skeleton.load("https://shop.yunfanshidai.com/xcxht/qinggong/res/adminion/bazhang.sk");
+    window.setTimeout(function () {
+        skeleton.destroy();
+    }, time);
+};
+// 金币动画
+var coinanimation = function (target, time, pos, playback) {
+    if (playback === void 0) { playback = 1; }
+    var skeleton = new Laya.Skeleton();
+    skeleton.playbackRate(playback);
+    target.addChild(skeleton);
+    skeleton.pos(pos.x, pos.y);
+    skeleton.load("https://shop.yunfanshidai.com/xcxht/qinggong/res/adminion/love.sk");
+    window.setTimeout(function () {
+        skeleton.destroy();
+    }, time);
+};
+// 窗口抖动
+var windowshack = function (shackx, shacky, time) {
+    if (shackx === void 0) { shackx = 5; }
+    if (shacky === void 0) { shacky = 5; }
+    if (time === void 0) { time = 500; }
+    var x = shackx, y = shacky;
+    var times = window.setInterval(function () {
+        Laya.stage.x += x;
+        Laya.stage.y += y;
+        x = -x;
+        y = -y;
+    }, 6);
+    window.setTimeout(function () {
+        window.clearInterval(times);
+        Laya.stage.x = 0;
+        Laya.stage.y = 0;
+    }, time);
+};
+// 弹性缩放
+var scaleelastic = function (target, x, y, time) {
+    if (x === void 0) { x = 1.2; }
+    if (y === void 0) { y = 1.2; }
+    if (time === void 0) { time = 150; }
+    Laya.Tween.to(target, { scaleX: x, scaleY: y }, time, Laya.Ease.bounceInOut, Laya.Handler.create(_this, function () {
+        target.scale(1, 1);
+    }));
+};
+// 移动重复动画
+var repeatadimation = function (target, office, time) {
+    Laya.Tween.to(target, { x: office.x, y: office.y }, time, Laya.Ease.bounceInOut, Laya.Handler.create(_this, function () {
+        target.scale(1, 1);
+    }));
 };
 //# sourceMappingURL=common.js.map

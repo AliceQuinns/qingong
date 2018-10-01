@@ -1,8 +1,8 @@
 {
     "x":0,
     "type":"Dialog",
-    "selectedBox":1,
-    "selecteID":3,
+    "selectedBox":3,
+    "selecteID":15,
     "props":{"width":750,"sceneColor":"#ffffff","height":1280},
     "nodeParent":-1,
     "label":"Dialog",
@@ -15,7 +15,7 @@
         {
             "x":15,
             "type":"Image",
-            "props":{"y":-100,"x":-161,"width":1107,"skin":"index/mask.png","height":1570,"alpha":0.7},
+            "props":{"y":-100,"x":-156,"width":1107,"skin":"index/mask.png","height":1570,"alpha":0.7},
             "nodeParent":1,
             "label":"Image",
             "isDirectory":false,
@@ -28,7 +28,7 @@
         {
             "x":15,
             "type":"Image",
-            "props":{"y":632,"x":371,"var":"content","name":"content","anchorY":0.5,"anchorX":0.5},
+            "props":{"y":635,"x":371,"var":"content","name":"content","anchorY":0.5,"anchorX":0.5},
             "nodeParent":1,
             "label":"Image(content)",
             "isOpen":true,
@@ -54,7 +54,7 @@
                 {
                     "x":30,
                     "type":"Text",
-                    "props":{"y":42,"x":-370,"width":750,"var":"reward","valign":"middle","text":"获得1000个金币","strokeColor":"#101010","stroke":8,"pivotY":0.5,"pivotX":0.5,"name":"reward","height":70,"fontSize":30,"font":"Arial","color":"#fffde3","bold":true,"align":"center"},
+                    "props":{"y":42,"x":-370,"width":750,"var":"reward","valign":"middle","strokeColor":"#101010","stroke":8,"pivotY":0.5,"pivotX":0.5,"name":"reward","height":70,"fontSize":30,"font":"Arial","color":"#fffde3","bold":true,"align":"center"},
                     "nodeParent":3,
                     "label":"Text(reward)",
                     "isDirectory":false,
@@ -67,9 +67,9 @@
                 {
                     "x":30,
                     "type":"Image",
-                    "props":{"y":-250,"x":-95,"skin":"index/money.png"},
+                    "props":{"y":-232,"x":-32,"var":"proptype","skin":"index/jiangquan.png","name":"proptype"},
                     "nodeParent":3,
-                    "label":"Image",
+                    "label":"Image(proptype)",
                     "isDirectory":false,
                     "isAniNode":true,
                     "hasChild":false,

@@ -48295,6 +48295,11 @@ var GAME;
                 radices: this.radices
             }, function (data) {
                 console.log(data);
+                if (!data) {
+                    tips("抽奖过于频繁 请稍后重试");
+                    return;
+                }
+                ;
                 var self = _this;
                 var Result = Number(data.award) - 1; // 类型
                 var title = data["content"]; // 剧情文本
@@ -48322,8 +48327,8 @@ var GAME;
         // 转盘动画
         turntable.prototype.admin = function (target, angle, callback) {
             // 转动速度为2秒一圈 不论角度多少都要转2圈
-            var angles = angle + 720 + target.rotation;
-            var time = 4000 + angle / 360 * 2000;
+            var angles = angle + 1080 + target.rotation;
+            var time = 3000 + angle / 360 * 2000;
             Laya.Tween.to(target, { rotation: angles }, time, Laya.Ease.expoOut, callback, null);
         };
         // 道具界面特效
@@ -48459,6 +48464,7 @@ var GAME;
 (function (GAME) {
     var palace = /** @class */ (function () {
         function palace() {
+            this.bazdir = true; // 巴掌方向
         }
         // 开启冷宫模块
         palace.prototype.open = function () {
@@ -48469,6 +48475,10 @@ var GAME;
                 openid: LeadInfo.openID
             }, function (data) {
                 console.log(data);
+                if (data.status === "fail") {
+                    tips("冷宫还未解锁");
+                    return;
+                }
                 if (data.enemylist.length <= 0) {
                     tips("暂时没有敌人");
                 }
@@ -48520,44 +48530,28 @@ var GAME;
             var Lead = this.enemy.getChildByName("content").getChildByName("Lead"); // 人物
             Lead.skin = "Enemy/" + data.level + ".png";
             var textcont = this.enemy.getChildByName("content").getChildByName("textcont");
-            textcont.text = "\u8D4F\u8D50" + data.Leadname + "5\u4E2A\u5DF4\u638C \u5373\u53EF\u83B7\u5F97" + Format(data.coin) + "\u4E2A\u91D1\u5E01";
+            textcont.text = "\u6BCF\u8D4F\u8D50" + data.Leadname + "1\u4E2A\u5DF4\u638C \u5373\u53EF\u83B7\u5F97" + Format(data.coin) + "\u4E2A\u91D1\u5E01";
             addClick(Lead, function () {
-                console.log(data.coin);
                 _this.BattleAnimation(Lead, data.coin);
             }, this);
         };
         // 战斗动画
         palace.prototype.BattleAnimation = function (pos, money) {
-            var skeleton = new Laya.Skeleton();
-            pos.addChild(skeleton);
-            skeleton.pos(pos.x, pos.y + 50);
-            skeleton.load("https://shop.yunfanshidai.com/xcxht/qinggong/res/animation/hand.sk");
-            // 战斗抖动
-            var x = 10;
-            var y = 10;
-            var time = window.setInterval(function () {
-                Laya.stage.x += x;
-                Laya.stage.y += y;
-                x = -x;
-                y = -y;
-            }, 10);
-            var times;
-            window.setTimeout(function () {
-                Laya.stage.pos(0, 0);
-                skeleton.destroy();
-                window.clearInterval(time);
-                var _targetUI = init_alert(ui.reward2UI, function () {
-                    // 旋转光效
-                    var Light = _targetUI.getChildByName("content").getChildByName("Light");
-                    times = window.setInterval(function () {
-                        Light.rotation += 10;
-                    }, 50);
-                }, function () {
-                    Laya.stage.event("MoneyAdd", money);
-                    tips("\u5DF2\u83B7\u5F97" + Format(money) + " \u91D1\u5E01");
-                    window.clearInterval(times);
-                });
-            }, 3000);
+            // 短震动
+            shock(1);
+            // 攻击动画
+            attackadmin(pos, 100, { x: pos.x - pos.width / 2, y: pos.y - pos.height / 2 }, 0.01, this.bazdir);
+            this.bazdir = !this.bazdir;
+            // 窗口抖动
+            windowshack(2, 1, 300);
+            // 收益提示
+            tips(Format(money) + "\u91D1\u5E01", "coin", pos.x + pos.width * Math.random(), pos.y + pos.height * Math.random(), 200);
+            // 金币增加
+            Laya.stage.event("MoneyAdd", money);
+            // 主角缩放
+            scaleelastic(pos);
+            // 巴掌音效
+            window["_audio"]._Sound("slap");
         };
         return palace;
     }());
@@ -48567,6 +48561,7 @@ var GAME;
 var GAME;
 (function (GAME) {
     var index = /** @class */ (function () {
+        // https://shop.yunfanshidai.com/xcxht/qinggong/
         function index() {
             //  玩家数据
             this.GameInfo = {
@@ -48574,15 +48569,31 @@ var GAME;
                 coin: "0",
                 diamonds: "0",
                 volum: 0,
-                speed: 0,
+                speed: "0",
                 grade: 1,
                 role_level: 1,
             };
+            var self = this;
             Laya.loader.load([
                 "https://shop.yunfanshidai.com/xcxht/qinggong/res/atlas/index.atlas",
                 "https://shop.yunfanshidai.com/xcxht/qinggong/res/atlas/Lead.atlas",
                 "https://shop.yunfanshidai.com/xcxht/qinggong/res/atlas/Enemy.atlas",
-            ], Laya.Handler.create(this, this.init), Laya.Handler.create(this, this.onProgress, null, false));
+            ], Laya.Handler.create(this, function () {
+                if (!window["wx"]) {
+                    self.init("", "https://shop.yunfanshidai.com/xcxht/qinggong/api/login_test.php");
+                }
+                else {
+                    window["wx"].login({
+                        success: function (data) {
+                            console.log(data);
+                            self.init(data.code, "https://shop.yunfanshidai.com/xcxht/qinggong/api/login.php");
+                        },
+                        fail: function (err) {
+                            tips("请授权");
+                        }
+                    });
+                }
+            }), Laya.Handler.create(this, this.onProgress, null, false));
             window["___index"] = this;
             window["GameInfo"] = this.GameInfo;
         }
@@ -48590,7 +48601,7 @@ var GAME;
             var bar2 = window["loginUI"].getChildByName("bar2");
             bar2.scale(pro, 1);
         };
-        index.prototype.init = function () {
+        index.prototype.init = function (code, url) {
             var _this = this;
             window.setTimeout(function () {
                 window["loginUI"].destroy();
@@ -48599,7 +48610,10 @@ var GAME;
             this.indexUI = new ui.indexUI;
             Laya.stage.addChild(this.indexUI);
             // 加载用户数据
-            Ajax("GET", "https://shop.yunfanshidai.com/xcxht/qinggong/api/login.php", null, function (data) {
+            Ajax("GET", url, {
+                code: code,
+                scene: 0
+            }, function (data) {
                 if (data['status'] === "fail") {
                     console.log("登陆失败");
                 }
@@ -48607,11 +48621,17 @@ var GAME;
                     _this.customEvent(); // 自定义事件
                     _this.staticObj(); // 静态化常用变量
                     console.log(data);
-                    // 收益弹框
-                    var alertUI_1 = init_alert(ui.alertUI, function () {
-                        var text = alertUI_1.getChildByName("content").getChildByName("contentText");
-                        text.text = (!!data.offline) ? data.offline : "0个金元宝";
-                    });
+                    // 非新用户显示离线收益与签到
+                    if (data.isnew.toString() === "2") {
+                        // 收益弹框
+                        var alertUI_1 = init_alert(ui.alertUI, function () {
+                            var text = alertUI_1.getChildByName("content").getChildByName("contentText");
+                            text.text = (!!data.offline) ? data.offline + "\u4E2A\u91D1\u5E01" : "0个金币";
+                        }, function () {
+                            // 签到
+                            (!!data["issign"] && data["issign"] === "1") ? _this.Signin(data["signdays"]) : console.log("已签到");
+                        });
+                    }
                     // 玩家ID
                     (!!data.openid) ? _this.GameInfo.userid = data.openid : console.log("无玩家id数据");
                     LeadInfo.openID = data.openid;
@@ -48627,13 +48647,12 @@ var GAME;
                     (!!data.diamonds) ? Laya.stage.event("diamondsSet", data.diamonds) : console.log("无金元宝或无该数据");
                     // 创建游戏主角 
                     (!!data.rolelist) ? _this.Lead(data.rolelist) : console.log("无法获取主角信息");
-                    // 冷宫列表
-                    // (!!data.lglist) ? LeadInfo.palaceList = data.lglist : console.log("无法获取冷宫列表");
                     // 商店列表
                     (!!data.lockinfo) ? LeadInfo.locklist = data.lockinfo : console.log("无法获取商店列表");
                     _this.turntable = new GAME.turntable(); // 转盘模块
                     _this.shop = new GAME.shop(LeadInfo.locklist); // 商店模块
                     _this.palace = new GAME.palace(); // 冷宫模块
+                    _this.course = new GAME.Course(_this.indexUI); // 新手引导
                     _this.event(); // 事件监听
                     _this.updateshopBtn(); // 更新购买按钮价格
                     window["_audio"].onBGM();
@@ -48644,10 +48663,88 @@ var GAME;
                     // 抽奖券
                     window.setInterval(function () {
                         Laya.stage.event("volumAdd", 1);
-                    }, 30000);
+                    }, 1800000);
+                    // 新手指引
+                    // (!!data.isnew && data.isnew.toString() === '1') ? this.course.open() : console.log("非新用户");
                 }
             }, function (err) {
                 console.log(err, "无法请求数据");
+                tips("获取不到您的信息");
+            });
+        };
+        // 签到
+        index.prototype.Signin = function (day) {
+            var _this = this;
+            for (var i = 0; i < day; i++) {
+                signdays[i].type = true;
+            }
+            if (!!signdays[Number(day)])
+                signdays[Number(day)]["open"] = true;
+            var data = signdays;
+            var targetUI = init_alert(ui.SignUI);
+            var target = targetUI._list;
+            target.vScrollBarSkin = '';
+            target.array = data;
+            target.scrollBar.elasticBackTime = 500;
+            target.scrollBar.elasticDistance = 100;
+            target.renderHandler = new Laya.Handler(this, function (cell, index) {
+                if (index > data.length)
+                    return;
+                var userdata = data[index];
+                var days = cell.getChildByName("days");
+                (userdata["open"]) ? days.color = "#33c0dc" : days.color = "#633d26";
+                days.text = "\u7B2C" + userdata.day + "\u5929";
+                var title = cell.getChildByName("title");
+                (userdata.type) ? title.text = "\u5DF2\u9886\u53D6\u5956\u52B1" : title.text = "\u5409\u65F6\u672A\u5230";
+                var titlebg = cell.getChildByName("titlebg");
+                (userdata["open"]) ? titlebg.skin = "index/today_line.png" : titlebg.skin = "index/line2.png";
+                var btn_coin = cell.getChildByName("btn_coin");
+                if (userdata["open"]) {
+                    btn_coin.disabled = false;
+                    addClick(btn_coin, function () {
+                        Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/usersign.php", {
+                            openid: LeadInfo.openID,
+                        }, function (data) {
+                            Propalert(userdata.Prop.type, userdata.Prop.title); // 道具弹窗
+                            // data[index]["open"] = false;
+                            targetUI._close();
+                        }, function (err) {
+                            tips("签到失败");
+                        });
+                    }, _this, true);
+                }
+                else {
+                    btn_coin.offAll(Laya.Event.CLICK);
+                    btn_coin.disabled = true;
+                }
+            });
+        };
+        // 邀请好友
+        index.prototype.shared = function () {
+            var _this = this;
+            var data = shareddata;
+            var targetUI = init_alert(ui.InvitingfriendsUI);
+            var target = targetUI._list;
+            var BTN = targetUI.getChildByName("content").getChildByName("shareBTN");
+            addClick(BTN, function () {
+                window["shareBTN"];
+                console.log("分享");
+            }, this, true);
+            target.vScrollBarSkin = '';
+            target.array = data;
+            target.scrollBar.elasticBackTime = 500;
+            target.scrollBar.elasticDistance = 100;
+            target.renderHandler = new Laya.Handler(this, function (cell, index) {
+                if (index > data.length)
+                    return;
+                var userdata = data[index];
+                var LeadName = cell.getChildByName("LeadName");
+                LeadName.text = "\u9080\u8BF7" + userdata.size + "\u4F4D\u597D\u53CB";
+                var coin = cell.getChildByName("coin");
+                coin.text = "" + userdata.jinyunbao;
+                addClick(cell.getChildByName("btn_coin"), function () {
+                    tips("未成功邀请好友");
+                }, _this, true);
             });
         };
         // 常用对象静态化
@@ -48680,6 +48777,18 @@ var GAME;
             addClick(this.indexUI.recovery, function () {
                 tips("请拖动人物到此处");
             }, this, true);
+            // 邀请好友
+            addClick(this.indexUI.Luckdraw, function () {
+                _this.shared();
+            });
+            // 获取金元宝
+            addClick(this.indexUI.addmoney, function () {
+                _this.shared();
+            });
+            // 获取金币
+            addClick(this.indexUI.addcoin, function () {
+                _this.shared();
+            });
         };
         // 自定事件
         index.prototype.customEvent = function () {
@@ -48774,16 +48883,45 @@ var GAME;
                 }, function (err) {
                 });
             });
-            // 金币速度更改
+            // 金币速度更改 1 加 2 减
             Laya.stage.on("speedSet", this, function (e) {
-                _this.GameInfo.speed += e;
-                if (_this.GameInfo.speed <= 0)
-                    _this.GameInfo.speed = 0;
-                _this._coinspeed.text = Format(Math.floor(_this.GameInfo.speed).toString()) + "/\u79D2";
+                console.log(e);
+                var a;
+                if (e.type === 1) {
+                    a = addition(_this.GameInfo.speed, e.value);
+                }
+                else if (e.type === 2) {
+                    a = subtraction(_this.GameInfo.speed, e.value);
+                }
+                if (a.slice(0, 1) === "-") {
+                    _this.GameInfo.speed = "0";
+                    _this._coinspeed.text = 0 + "/\u79D2";
+                }
+                else {
+                    _this.GameInfo.speed = a;
+                    _this._coinspeed.text = Format(a) + "/\u79D2";
+                }
             });
             // 创建新主角
             Laya.stage.on("LeadCreate", this, function (e) {
                 new GAME.lead(e, _this.indexUI);
+            });
+            // 动画池管理
+            Laya.stage.on("adminpool", this, function (e) {
+                adminPool.child += e;
+                if (adminPool.child >= adminPool.maxLength)
+                    adminPool.child = adminPool.maxLength;
+                if (adminPool.child <= 0)
+                    adminPool.child = 0;
+                for (var i = adminPool.maxLength; i--; i) {
+                    var target = _this.indexUI.getChildByName("adminList").getChildByName("adminList" + (i + 1));
+                    if (i < adminPool.child) {
+                        target.skin = "index/weizhi1.png";
+                    }
+                    else {
+                        target.skin = "index/weizhi2.png";
+                    }
+                }
             });
         };
         // 批量创建主角对象
@@ -48795,7 +48933,7 @@ var GAME;
                 }
             }
         };
-        // 更新快速购买按钮价格
+        // 快速购买按钮 显示
         index.prototype.updateshopBtn = function () {
             var _this = this;
             var Leadprice = 0; // 当前主角价格
@@ -48809,20 +48947,22 @@ var GAME;
         // 主角购买
         index.prototype.leadshop = function () {
             var _this = this;
+            if (LeadInfo.Leadlist >= 12) {
+                tips("后宫已满");
+                return;
+            }
+            // 自动购买当前解锁最高的主角
             var Leadprice = 0; // 当前主角价格
             LeadInfo.locklist.forEach(function (item, index) {
                 if (item.grade === String(_this.GameInfo.role_level)) {
                     Leadprice = item.price;
                 }
             });
-            if (LeadInfo.Leadlist >= 12) {
-                tips("后宫已满");
-                return;
-            }
             if (this.GameInfo.coin === "0" || !ContrastNumber(this.GameInfo.coin, Leadprice)) {
                 tips("金币不足");
                 return;
             }
+            window["_audio"]._Sound("buy"); // 购买音效
             Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/buyrole.php", {
                 openid: this.GameInfo.userid,
                 grade: this.GameInfo.role_level // 购买等级
@@ -48839,11 +48979,11 @@ var GAME;
                     };
                     new GAME.lead(user, _this.indexUI);
                 }
-                // 用户剩余金币
                 var coin = data.coin;
-                Laya.stage.event("MoneySet", coin);
-                _this.updateshopBtn(); // 更新价格
-                tips("购买成功");
+                Laya.stage.event("MoneySet", coin); // 用户剩余金币
+                Laya.stage.event("locklistSet", { grade: data.grade, value: data.price }); // 更新商店价格
+                // this.updateshopBtn();// 更新价格
+                // tips("购买成功");
             }, function (err) {
                 tips("购买失败");
             });
@@ -48861,12 +49001,12 @@ var GAME;
             // 回收矩阵
             collision.push(getMatrix(this.indexUI.getChildByName("recovery")));
             // 动画运动范围
-            var AnimationPool = this.indexUI.getChildByName("AnimationPool");
+            var AnimationPool = this.indexUI.getChildByName("adminrange");
             adminPool.Range = {
                 startX: AnimationPool.x,
-                startY: AnimationPool.y + AnimationPool.height / 2,
-                endX: AnimationPool.x + AnimationPool.width - LeadInfo.width / 2,
-                endY: AnimationPool.y + AnimationPool.height - LeadInfo.height,
+                startY: AnimationPool.y,
+                endX: AnimationPool.x + AnimationPool.width,
+                endY: AnimationPool.y + AnimationPool.height,
                 target: AnimationPool
             };
         };
@@ -48956,6 +49096,7 @@ var GAME;
                 tips("金币不足");
                 return;
             }
+            window["_audio"]._Sound("buy"); // 购买音效
             Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/buyrole.php", {
                 openid: LeadInfo.openID,
                 grade: grade,
@@ -48976,7 +49117,6 @@ var GAME;
                     var coin = data.coin;
                     Laya.stage.event("MoneySet", coin); // 修改剩余金币
                     Laya.stage.event("locklistSet", { grade: data.grade, value: data.price }); // 更新商店价格
-                    tips("购买成功");
                 }
                 else {
                     tips("购买失败");
@@ -48990,15 +49130,86 @@ var GAME;
     GAME.shop = shop;
 })(GAME || (GAME = {}));
 //# sourceMappingURL=Shop.js.map
-window["wx"] = {};
+window["WxModular"] = {
+    // 主动分享 被动分享 群分享功能
+    share: function () {
+        wx.request({
+            url: 'https://shop.yunfanshidai.com/xcxht/slyxhz/api/share_info.php?gameid=8',
+            header: {
+                'content-type': 'application/json' // 默认值
+            },
+            success: function (res) {
+                // 开启转发功能
+                wx.showShareMenu({ withShareTicket: true });
+                // 主动转发
+                window.shareBTN = function () {
+                    wx.shareAppMessage({
+                        title: res.data.info,
+                        imageUrl: canvas.toTempFilePathSync({
+                            x: 0,
+                            y: 0,
+                            width: canvas.width,
+                            height: canvas.width / 5 * 4,
+                            destWidth: canvas.width,
+                            destHeight: canvas.width / 5 * 4,
+                        })
+                    });
+                };
+                // 被动转发
+                wx.onShareAppMessage(function () {
+                    return {
+                        title: res.data.info,
+                        imageUrl: res.data.image
+                    };
+                });
+                // 群分享
+                wx.onShow(function (data) {
+                    if (data.shareTicket) {
+                        console.log("此小游戏是通过群分享进入的", data.shareTicket);
+                        // 开启群排行
+                        // window.GROUPSHARE = true; // 全局变量
+                        // wx.postMessage({type:3,data: {shareTicket: data.shareTicket}});//开启群排行
+                    }
+                });
+            }
+        });
+    },
+    // 截屏
+    Screenshot: function (type) {
+        // 5:4  canvas.height/2-(canvas.width/5*4)/2
+        if (type === 1) {
+            return canvas.toTempFilePathSync({
+                x: 0,
+                y: 0,
+                width: canvas.width,
+                height: canvas.width / 5 * 4,
+                destWidth: canvas.width,
+                destHeight: canvas.width / 5 * 4,
+            });
+        }
+        else if (type === 2) {
+            // 全屏
+            return canvas.toTempFilePathSync({
+                x: 0,
+                y: 0,
+                width: canvas.width,
+                height: canvas.height,
+                destWidth: canvas.width,
+                destHeight: canvas.height,
+            });
+        }
+    },
+};
+if (window["wx"])
+    window["WxModular"].share();
 //# sourceMappingURL=wx.js.map
 var _this = this;
 // 碰撞矩阵池
 var collision = [];
 // 主角信息
 var LeadInfo = {
-    width: 90,
-    height: 125,
+    width: 96,
+    height: 135,
     openID: 0,
     locklist: [],
     palaceList: [],
@@ -49010,6 +49221,24 @@ var adminPool = {
     child: 0,
     maxLength: 5,
 };
+// 邀请好友奖励列表
+var shareddata = [
+    { size: 1, jinyunbao: 10 },
+    { size: 2, jinyunbao: 15 },
+    { size: 3, jinyunbao: 20 },
+    { size: 4, jinyunbao: 25 },
+    { size: 5, jinyunbao: 30 },
+];
+// 签到奖励 1: 抽奖券 2: 金元宝
+var signdays = [
+    { day: 1, type: false, Prop: { type: 1, size: 4, title: "恭喜你获得4个抽奖券" } },
+    { day: 2, type: false, Prop: { type: 2, size: 2, title: "恭喜你获得2个金元宝" } },
+    { day: 3, type: false, Prop: { type: 1, size: 6, title: "恭喜你获得6个抽奖券" } },
+    { day: 4, type: false, Prop: { type: 2, size: 4, title: "恭喜你获得4个金元宝" } },
+    { day: 5, type: false, Prop: { type: 1, size: 10, title: "恭喜你获得10个抽奖券" } },
+    { day: 6, type: false, Prop: { type: 2, size: 6, title: "恭喜你获得6个金元宝" } },
+    { day: 7, type: false, Prop: { type: 1, size: 8, title: "恭喜你获得4个抽奖券" } },
+];
 var Ajax = function (type, url, data, success, failed) {
     if (success === void 0) { success = null; }
     if (failed === void 0) { failed = null; }
@@ -49046,7 +49275,7 @@ var Ajax = function (type, url, data, success, failed) {
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
             if (xhr.status == 200) {
-                if (!!xhr.responseText)
+                if (!!xhr.responseText && !!success)
                     success(JSON.parse(xhr.responseText));
             }
             else {
@@ -49114,7 +49343,7 @@ var drag = function (element, callback) {
             }
             if (!isCollision) {
                 console.log("未发生任何碰撞 自动返回初始位置");
-                Laya.Tween.to(element, { x: position.x, y: position.y }, 500);
+                Laya.Tween.to(element, { x: position.x, y: position.y }, 100);
             }
         }
         else {
@@ -49172,6 +49401,7 @@ var init_alert = function (type, create_handler, clear_handler, close) {
         if (!!clear_handler && clear_handler instanceof Function)
             clear_handler(); //关闭窗口时执行
         type_obj._close();
+        type_obj.close_Btn.offAll(Laya.Event.CLICK);
     });
     type_obj.zOrder = 100;
     return type_obj;
@@ -49200,6 +49430,31 @@ var scaleAdmin = function (target) {
     setTimeout(function () {
         Laya.Tween.to(target, { alpha: 1, scaleX: 1, scaleY: 1 }, 500, Laya.Ease.backInOut, null, null);
     }, 500);
+};
+// 获得道具弹窗 1: 抽奖券 2: 金元宝 3: 金币
+var Propalert = function (type, text) {
+    if (text === void 0) { text = ""; }
+    var time;
+    var targetUI = init_alert(ui.reward2UI, null, function () {
+        window.clearInterval(time);
+    });
+    var proptype = targetUI.getChildByName("content").getChildByName("proptype");
+    var Light = targetUI.getChildByName("content").getChildByName("Light");
+    var reward = targetUI.getChildByName("content").getChildByName("reward");
+    reward.text = text;
+    if (type === 1) {
+        proptype.skin = "index/jiangquan.png";
+        proptype.pos(-32, -232);
+    }
+    else if (type === 2) {
+        proptype.skin = "index/yuanb.png";
+    }
+    else if (type === 3) {
+        proptype.skin = "index/money.png";
+    }
+    time = window.setInterval(function () {
+        Light.rotation += 10;
+    }, 50);
 };
 // 点击事件
 var addClick = function (btn, func, caller, removeAll, args) {
@@ -49253,7 +49508,7 @@ var createLetter = function (char, font, color, size) {
     return letter;
 };
 // 计数法
-var count = { 3: "K", 6: "M", 9: "B", 12: "T", 15: "AA", 18: "AB", 21: "AC", 24: "AD" };
+var count = { 3: "K", 6: "M", 9: "B", 12: "T", 15: "aa", 18: "ab", 21: "ac", 24: "ad", 27: "ae", 30: "af" };
 // 超大数值加法运算
 var addition = function (a, b) {
     var res = '', temp = 0;
@@ -49322,38 +49577,57 @@ var ContrastNumber = function (a, b) {
         return true;
     return Boolean(aMaxb);
 };
+// 超大数值乘法
+var accMul = function (arg1, arg2) {
+    var m = 0, s1 = arg1.toString(), s2 = arg2.toString();
+    try {
+        m += s1.split(".")[1].length;
+    }
+    catch (e) { }
+    try {
+        m += s2.split(".")[1].length;
+    }
+    catch (e) { }
+    return Number(s1.replace(".", "")) * Number(s2.replace(".", "")) / Math.pow(10, m);
+};
 // 数值格式化
 var Format = function (value) {
-    var text = value;
+    var a = value;
+    var b;
     for (var i in count) {
-        if (value.length > Number(i)) {
-            text = value.slice(0, 1) + "." + value.slice(1, 5) + count[i];
+        var ii = Number(i);
+        if (a.length - 1 >= ii) {
+            b = a.slice(0, a.length - ii) + "." + a.slice(a.length - ii, a.length - ii + 2) + count[ii];
         }
     }
-    return text;
+    ;
+    if (!b)
+        return a;
+    return b;
 };
 // 提示弹框
-var tips = function (msg, type, x, y) {
+var tips = function (msg, type, x, y, zOrder) {
     if (type === void 0) { type = null; }
-    if (x === void 0) { x = null; }
-    if (y === void 0) { y = null; }
+    if (x === void 0) { x = 300; }
+    if (y === void 0) { y = 170; }
+    if (zOrder === void 0) { zOrder = 99; }
     if (!!type && type === "coin") {
         var bg = new Laya.Image("index/copper2.png");
-        bg.x = 300;
-        bg.y = 170;
-        bg.width = 50;
-        bg.height = 50;
+        bg.x = x;
+        bg.y = y;
+        bg.width = 30;
+        bg.height = 30;
         bg.anchorX = 0.5;
         bg.anchorY = 0.5;
         bg.alpha = 1;
         var text = new Laya.Label("+ " + msg);
-        text.fontSize = 30;
-        text.color = "#653e21";
-        text.x = 60;
-        text.y = 10;
+        text.fontSize = 20;
+        text.color = "#ffffff";
+        text.x = 40;
+        text.y = 2;
         text.bold = true;
         bg.addChild(text);
-        bg.zOrder = 99;
+        bg.zOrder = zOrder;
         Laya.stage.addChild(bg);
         Laya.Tween.to(bg, { y: 90, alpha: 0 }, 1500, Laya.Ease.strongInOut, Laya.Handler.create(_this, function (obj) {
             Laya.timer.once(1000, this, function (arg) {
@@ -49396,15 +49670,88 @@ var getLeadPrice = function (grade) {
     });
     return target;
 };
+// 震动 1 短 2 长
+var shock = function (type) {
+    if (!window["wx"])
+        return;
+    if (type === 1) {
+        window["wx"].vibrateShort();
+    }
+    else if (type === 2) {
+        window["wx"].vibrateLong();
+    }
+};
 // 爱心动画
-var loveadmin = function (target, time, pos) {
+var loveadmin = function (target, time, pos, playback) {
+    if (playback === void 0) { playback = 1; }
     var skeleton = new Laya.Skeleton();
+    skeleton.playbackRate(playback);
     target.addChild(skeleton);
     skeleton.pos(pos.x, pos.y);
-    skeleton.load("https://shop.yunfanshidai.com/xcxht/qinggong/res/animation/love.sk");
+    skeleton.load("https://shop.yunfanshidai.com/xcxht/qinggong/res/animation/aixng/love.sk");
     window.setTimeout(function () {
         skeleton.destroy();
     }, time);
+};
+// 攻击动画
+var attackadmin = function (target, time, pos, playback, direction) {
+    if (playback === void 0) { playback = 1; }
+    if (direction === void 0) { direction = true; }
+    var skeleton = new Laya.Skeleton();
+    skeleton.playbackRate(playback);
+    target.addChild(skeleton);
+    skeleton.pos(pos.x, pos.y);
+    if (!direction)
+        skeleton.scaleX = -1;
+    skeleton.load("https://shop.yunfanshidai.com/xcxht/qinggong/res/adminion/bazhang.sk");
+    window.setTimeout(function () {
+        skeleton.destroy();
+    }, time);
+};
+// 金币动画
+var coinanimation = function (target, time, pos, playback) {
+    if (playback === void 0) { playback = 1; }
+    var skeleton = new Laya.Skeleton();
+    skeleton.playbackRate(playback);
+    target.addChild(skeleton);
+    skeleton.pos(pos.x, pos.y);
+    skeleton.load("https://shop.yunfanshidai.com/xcxht/qinggong/res/adminion/love.sk");
+    window.setTimeout(function () {
+        skeleton.destroy();
+    }, time);
+};
+// 窗口抖动
+var windowshack = function (shackx, shacky, time) {
+    if (shackx === void 0) { shackx = 5; }
+    if (shacky === void 0) { shacky = 5; }
+    if (time === void 0) { time = 500; }
+    var x = shackx, y = shacky;
+    var times = window.setInterval(function () {
+        Laya.stage.x += x;
+        Laya.stage.y += y;
+        x = -x;
+        y = -y;
+    }, 6);
+    window.setTimeout(function () {
+        window.clearInterval(times);
+        Laya.stage.x = 0;
+        Laya.stage.y = 0;
+    }, time);
+};
+// 弹性缩放
+var scaleelastic = function (target, x, y, time) {
+    if (x === void 0) { x = 1.2; }
+    if (y === void 0) { y = 1.2; }
+    if (time === void 0) { time = 150; }
+    Laya.Tween.to(target, { scaleX: x, scaleY: y }, time, Laya.Ease.bounceInOut, Laya.Handler.create(_this, function () {
+        target.scale(1, 1);
+    }));
+};
+// 移动重复动画
+var repeatadimation = function (target, office, time) {
+    Laya.Tween.to(target, { x: office.x, y: office.y }, time, Laya.Ease.bounceInOut, Laya.Handler.create(_this, function () {
+        target.scale(1, 1);
+    }));
 };
 //# sourceMappingURL=common.js.map
 var GAME;
@@ -49427,6 +49774,8 @@ var GAME;
             // 背景音乐
             this.onBGM = function (prop) {
                 if (prop === void 0) { prop = ""; }
+                if (!window["wx"])
+                    return;
                 var target = _this.audiopool["bgm"];
                 if (!_this.status)
                     return;
@@ -49447,6 +49796,8 @@ var GAME;
             };
             // 音效
             this._Sound = function (type) {
+                if (!window["wx"])
+                    return;
                 if (!_this._url[type])
                     return;
                 if (!_this.status)
@@ -49494,6 +49845,124 @@ var GAME;
     GAME.aduio = aduio;
 })(GAME || (GAME = {}));
 //# sourceMappingURL=audio.js.map
+// 新手指引
+var GAME;
+(function (GAME) {
+    var Course = /** @class */ (function () {
+        function Course(traget) {
+            this._zOrder = 103;
+            this.targetUI = traget;
+        }
+        Course.prototype.open = function () {
+            // return;
+            // 遮罩层
+            this.mask = new Laya.Image("index/mask.png");
+            this.mask.pos(-180, -180);
+            this.mask.width = 1500;
+            this.mask.height = 1500;
+            this.targetUI.addChild(this.mask);
+            this.mask.zOrder = 102;
+            this.mask.alpha = 0.5;
+            // 手
+            this.hand = new Laya.Image("index/hand2.png");
+            this.hand.pos(442, 1191);
+            this.hand.zOrder = 103;
+            this.targetUI.addChild(this.hand);
+            // tips
+            this.tips = new Laya.Image("index/upgrade.png");
+            this.tips.pos(314, 1014);
+            this.tips.zOrder = 103;
+            this.targetUI.addChild(this.tips);
+            // arrow
+            this.Arrow = new Laya.Image("index/arrow.png");
+            this.tips.addChild(this.Arrow);
+            this.Arrow.pos(48, 65);
+            // tipstext
+            this.tipstext = new Laya.Text();
+            this.tips.addChild(this.tipstext);
+            this.tipstext.pos(2, 10);
+            this.tipstext.width = 145;
+            this.tipstext.height = 43;
+            this.tipstext.font = "Arial";
+            this.tipstext.text = "点击购买";
+            this.tipstext.fontSize = "20";
+            this.tipstext.bold = true;
+            this.tipstext.color = "#653e21";
+            this.tipstext.align = "center";
+            this.tipstext.overflow = "hidden";
+            this.tipstext.valign = "middle";
+            this.mask.on(Laya.Event.CLICK, this, function (e) {
+                e.stopPropagation();
+            });
+            this.purchase();
+        };
+        // 购买教程
+        Course.prototype.purchase = function () {
+            var _this = this;
+            var a = this._zOrder;
+            var target = this.targetUI.getChildByName("purchase");
+            a = [target.zOrder, target.zOrder = a][0];
+            console.log(target.zOrder);
+            this.tips.pos(target.x, target.y - target.height * 1.2);
+            this.hand.pos(target.x + target.width / 2 - this.hand.width / 2, target.y + target.height / 2);
+            target.once(Laya.Event.CLICK, this, function (e) {
+                _this.Synthesis();
+                a = [target.zOrder, target.zOrder = a][0];
+                console.log("购买");
+            });
+        };
+        // 合成教程
+        Course.prototype.Synthesis = function () {
+            var _this = this;
+            this.tipstext.text = "拖动升级";
+            // if(!this.targetUI.getChildByName("pool1")["leadClass"])return;
+            var pool1 = this.targetUI.getChildByName("pool1").leadClass.icon.parent;
+            var pool2 = this.targetUI.getChildByName("pool2").leadClass.icon.parent;
+            var a = pool1._zOrder;
+            pool1.zOrder = 120;
+            pool2.zOrder = pool1.zOrder;
+            this.tips.pos(pool1.x - pool1.width / 2, pool1.y - pool1.height * 1.2);
+            this.hand.pos(pool1.x, pool1.y + pool1.height);
+            pool1.once(Laya.Event.CLICK, this, function (e) {
+                _this.work();
+                pool1.zOrder = a;
+                pool2.zOrder = pool1.zOrder;
+                console.log("合成");
+            });
+        };
+        // 工作教程
+        Course.prototype.work = function () {
+            var _this = this;
+            Laya.stage.once("Synthesis", this, function (e) {
+                console.log("合成", e);
+                e.icon.parent.zOrder = _this._zOrder;
+                // 动画池
+                var AnimationPool = _this.targetUI.getChildByName("AnimationPool");
+                AnimationPool.zOrder = _this._zOrder;
+                _this.tipstext.text = "请拖动到此";
+                _this.tips.pos(_this.tips.x, _this.tips.y - 200);
+                _this.hand.pos(e.icon.parent.x, e.icon.parent.y + e.icon.parent.height);
+                Laya.stage.once("workstart", _this, function (e) {
+                    AnimationPool.zOrder = 0;
+                    _this.palace();
+                });
+            });
+        };
+        // 冷宫教程
+        Course.prototype.palace = function () {
+            var target = this.targetUI.palace;
+            target.zOrder = this._zOrder;
+            this.tips.pos(target.x + target.width / 2, target.y - target.height * 1.2);
+            this.hand.pos(target.x, target.y + target.height * 1.2);
+            target.once(Laya.Event.CLICK, this, function (e) {
+                target.zOrder = 0;
+            });
+        };
+        return Course;
+    }());
+    GAME.Course = Course;
+})(GAME || (GAME = {}));
+//# sourceMappingURL=Course.js.map
 // 主角
 var GAME;
 (function (GAME) {
@@ -49516,8 +49985,8 @@ var GAME;
             this.cycle = (!!data.cycle) ? Number(data.cycle) : console.log("未获取到周期");
             this.range = adminPool.Range; // 动画边界
             this.speed = {
-                x: this.cycle / 1000,
-                y: this.cycle / 10000
+                x: this.cycle / 2 / 1000,
+                y: this.cycle / 2 / 10000
             };
             this.init();
         }
@@ -49527,7 +49996,7 @@ var GAME;
             var child = createLead(this.grade, { width: LeadInfo.width, hieght: LeadInfo.height }); // 次节点
             this.icon = { parent: parent, child: child };
             this.icon.parent.id = this.id;
-            this.icon.child.alpha = 0.5;
+            this.icon.child.alpha = 0;
             this.icon.parent.touchState = true; // 开启拖动
             this.icon.parent.zOrder = this.icon.child.zOrder = 100;
             this.stage.addChild(this.icon.child);
@@ -49552,10 +50021,11 @@ var GAME;
                     if (adminPool.child >= adminPool.maxLength) {
                         console.log("已经满员了!");
                         tips("最大不超过5个");
-                        Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 350);
+                        Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 100);
                     }
                     else {
                         _this.work(); // 开始工作
+                        _this.icon.child.alpha = 0.5; // 子主角显示
                     }
                 }
                 else {
@@ -49569,26 +50039,28 @@ var GAME;
                     }
                     else if (target.leadClass.id == _this.id) {
                         console.log("原槽位");
-                        Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 350);
+                        Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 100);
                     }
                     else if (target.leadClass.grade === _this.grade) {
                         console.log("升级合体");
-                        _this.upgrade(target.leadClass);
+                        _this.upgrade(target.leadClass); // 合体后位置为 被碰撞物体
                     }
                     else {
-                        console.log("调换位置");
-                        _this.replacePos(target, { id: _this.id, pos: target.name.slice(4) }, { id: target.leadClass.id, pos: _this.pos });
+                        console.log("原槽位");
+                        Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 100);
                     }
                 }
             });
             // 工作状态
             if (this.state === "1") {
+                this.icon.child.alpha = 0.5;
                 this.icon.parent.touchState = false; // 暂停拖动
                 this.cointimer("open"); // 金币计时器
                 this.AdminTimer = true;
                 this.adminUpdate(); // 运动动画
                 this.endWork(); // 结束工作控制
-                adminPool.child += 1;
+                // adminPool.child += 1;
+                Laya.stage.event("adminpool", 1);
             }
         };
         // 升级
@@ -49601,7 +50073,7 @@ var GAME;
                 role2: datas.id,
                 position: datas.pos,
             }, function (data) {
-                loveadmin(_this.stage, 500, { x: datas.position.x + 50, y: datas.position.y + 50 }); // 爱心动画
+                loveadmin(_this.stage, 350, { x: datas.position.x + 50, y: datas.position.y + 50 }); // 爱心动画
                 _this.delete();
                 datas.delete();
                 tips("升级成功");
@@ -49613,16 +50085,17 @@ var GAME;
                     wages: data.wages,
                     cycle: data.cycle,
                 };
-                new GAME.lead(user, _this.stage);
+                var newLead = new GAME.lead(user, _this.stage);
+                Laya.stage.event("Synthesis", newLead); // 发送合成事件
                 if (!!data.role_level)
                     Laya.stage.event("rolelevelSet", data.role_level); // 更新人物解锁等级
                 if (!!data.islock && data.islock === 2) {
                     console.log("人物解锁列表更新");
-                    _this.unlock(data.lockinfo, data.role_name);
+                    _this.unlock(data.lockinfo, data.lockinfo.role_name);
                 }
             }, function (err) {
                 tips("升级失败");
-                Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 350);
+                Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 100);
             });
         };
         // 更换位置
@@ -49631,14 +50104,14 @@ var GAME;
             var b = this.seat; // 当前槽位
             // 更新当前对象坐标
             if (!this.AdminTimer)
-                Laya.Tween.to(this.icon.parent, { x: a.x + (this.seat.width / 2 - this.icon.child.width / 2), y: a.y }, 350); // 非工作状态则更新坐标
+                Laya.Tween.to(this.icon.parent, { x: a.x + (this.seat.width / 2 - this.icon.child.width / 2), y: a.y }, 100); // 非工作状态则更新坐标
             this.icon.child.pos(a.x + (this.seat.width / 2 - this.icon.child.width / 2), a.y);
             // position变量更新
             this.position = { x: a.x + (this.seat.width / 2 - this.icon.child.width / 2), y: a.y };
             // 如果新槽位中已存在对象则更新该对象
             if (!!a["leadClass"]) {
                 if (!a["leadClass"].AdminTimer)
-                    Laya.Tween.to(a.leadClass.icon.parent, { x: b.x + (this.seat.width / 2 - this.icon.child.width / 2), y: b.y }, 350); // 非工作状态则更新坐标
+                    Laya.Tween.to(a.leadClass.icon.parent, { x: b.x + (this.seat.width / 2 - this.icon.child.width / 2), y: b.y }, 100); // 非工作状态则更新坐标
                 a.leadClass.icon.child.pos(b.x + (this.seat.width / 2 - this.icon.child.width / 2), b.y);
                 a.leadClass.position = { x: b.x + (this.seat.width / 2 - this.icon.child.width / 2), y: b.y };
             }
@@ -49655,6 +50128,7 @@ var GAME;
             var _this = this;
             if (obj2 === void 0) { obj2 = null; }
             var self = this;
+            this.changePos(target); // 更换位置
             Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/changepos.php", {
                 openid: LeadInfo.openID,
                 roleid: obj.id,
@@ -49666,28 +50140,32 @@ var GAME;
                         roleid: obj2.id,
                         position: obj2.pos
                     }, function (data) {
-                        _this.changePos(target); // 更换位置
+                        // this.changePos(target);// 更换位置
                     }, function (err) {
                         console.log("第二个主角未成功调换位置");
                     });
                 }
                 else {
-                    _this.changePos(target); // 更换位置
+                    // this.changePos(target);// 更换位置
                 }
                 console.log("位置调换成功");
             }, function (err) {
                 tips("无法调换位置");
-                Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 350);
+                Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 100);
             });
         };
         // 开始工作
         lead.prototype.work = function () {
+            var _this = this;
+            window["_audio"]._Sound("appear");
             Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/runrole.php", {
                 openid: LeadInfo.openID,
                 roleid: this.id
             }, function (data) {
                 console.log("开始工作");
-                adminPool.child += 1;
+                Laya.stage.event("adminpool", 1);
+                Laya.stage.event("workstart", _this);
+                // adminPool.child += 1;
             }, function (err) {
                 console.log("工作请求失败");
             });
@@ -49705,14 +50183,13 @@ var GAME;
             if (type === "open") {
                 this.Timer = window.setInterval(function () {
                     Laya.stage.event("MoneyAdd", _this.wages * _this.Multiple);
-                    tips(Format((_this.wages * _this.Multiple).toString()), "coin");
+                    tips(Format((_this.wages * _this.Multiple).toString()), "coin", _this.icon.parent.x, _this.icon.parent.y);
                 }, this.cycle);
-                // 更改总速度
-                Laya.stage.event("speedSet", this.wages);
+                Laya.stage.event("speedSet", { type: 1, value: Math.floor(this.wages / (this.cycle / 1000)).toString() });
             }
             else if (type === "stop") {
                 window.clearInterval(this.Timer);
-                Laya.stage.event("speedSet", -this.wages);
+                Laya.stage.event("speedSet", { type: 2, value: Math.floor(this.wages / (this.cycle / 1000)).toString() });
             }
             else if (type === "replace") {
                 window.clearInterval(this.Timer);
@@ -49725,6 +50202,7 @@ var GAME;
             var btn = targetUI.getChildByName("content").getChildByName("shared");
             addClick(btn, function () {
                 console.log("分享");
+                window["shareBTN"];
             }, this);
             // 花朵动画
             var Flower = targetUI.getChildByName("content").getChildByName("Flower");
@@ -49748,9 +50226,9 @@ var GAME;
                 coin: addition(window["___index"].GameInfo.coin, getLeadPrice(this.grade))
             }, function (data) {
                 tips("回收成功");
-                Laya.stage.event("MoneySet", addition(window["___index"].GameInfo.coin, getLeadPrice(_this.grade)));
+                Laya.stage.event("MoneyAdd", accMul(getLeadPrice(_this.grade), 0.8)); // 添加金币
+                Laya.stage.event("updateCoin"); // 更新服务器金币
                 _this.delete();
-                // LeadInfo.Leadlist -= 1;
             }, function (err) {
                 tips("回收失败");
                 Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 350);
@@ -49790,15 +50268,17 @@ var GAME;
                     position: _this.seat.name.slice(4)
                 }, function (data) {
                     _this.AdminTimer = false; // 停止动画
+                    _this.icon.child.alpha = 0;
                     _this.cointimer("stop"); // 停止工作
-                    Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 300);
+                    Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 100);
                     window.setTimeout(function () {
                         _this.icon.parent.touchState = true; // 开启拖动
-                        adminPool.child -= 1;
+                        Laya.stage.event("adminpool", -1);
+                        // adminPool.child -= 1;
                     }, 500);
                 }, function (err) {
                     console.log("无法停止工作");
-                    Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 350);
+                    Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 100);
                 });
             });
         };
@@ -49806,9 +50286,12 @@ var GAME;
         lead.prototype.delete = function () {
             this.icon.parent.destroy();
             this.icon.child.destroy();
-            this.AdminTimer = false; // 停止动画
+            if (!!this.AdminTimer) {
+                Laya.stage.event("adminpool", -1);
+                this.AdminTimer = false; // 停止动画
+            }
             this.cointimer("stop");
-            this.seat.leadClass = null;
+            this.seat.leadClass = null; // 清空槽位
             LeadInfo.Leadlist -= 1;
         };
         return lead;
@@ -49843,10 +50326,26 @@ var ui;
             _super.prototype.createChildren.call(this);
             this.createView(ui.BattleUI.uiView);
         };
-        BattleUI.uiView = { "type": "Dialog", "props": { "width": 750, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": -102, "x": -159, "width": 1107, "skin": "index/mask.png", "height": 1570, "alpha": 0.7 } }, { "type": "Image", "props": { "y": 667, "x": 347, "var": "content", "skin": "index/duizhan_bg.png", "name": "content", "anchorY": 0.5, "anchorX": 0.5 }, "child": [{ "type": "Text", "props": { "y": 70, "x": 13, "width": 416, "var": "Leadname", "text": "容嬷嬷", "name": "Leadname", "height": 50, "fontSize": 50, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": 175, "x": 131, "var": "Lead", "skin": "Enemy/10.png", "name": "Lead" } }, { "type": "Text", "props": { "y": 496, "x": 141, "wordWrap": true, "width": 255, "var": "textcont", "valign": "middle", "text": "赏赐对方5个巴掌可获得500金币", "overflow": "hidden", "name": "textcont", "height": 159, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": 543, "x": 79, "skin": "index/hand.png" } }, { "type": "Image", "props": { "y": 162, "x": 325, "width": 50, "skin": "index/LeadName.png", "height": 282 } }, { "type": "Text", "props": { "y": 153, "x": 330, "wordWrap": true, "width": 40, "valign": "middle", "text": "点击人物开始攻击", "overflow": "visible", "height": 300, "fontSize": 25, "font": "Arial", "color": "#4f2823", "bold": true, "align": "center" } }] }, { "type": "Image", "props": { "y": 305, "x": 586, "var": "close_Btn", "skin": "index/close.png", "name": "close_Btn", "anchorY": 0.5, "anchorX": 0.5 } }] };
+        BattleUI.uiView = { "type": "Dialog", "props": { "width": 750, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": -102, "x": -159, "width": 1107, "skin": "index/mask.png", "height": 1570, "alpha": 0.7 } }, { "type": "Image", "props": { "y": 667, "x": 347, "width": 451, "var": "content", "name": "content", "height": 737, "anchorY": 0.5, "anchorX": 0.5 }, "child": [{ "type": "Image", "props": { "y": 1, "x": 45, "skin": "index/name_bg.png" } }, { "type": "Text", "props": { "y": 14, "x": 46, "width": 361, "var": "Leadname", "text": "容嚒嚒", "overflow": "hidden", "name": "Leadname", "height": 50, "fontSize": 50, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": 300, "x": 225, "var": "Lead", "skin": "Enemy/10.png", "name": "Lead", "anchorY": 0.5, "anchorX": 0.5 } }, { "type": "Text", "props": { "y": 577, "x": 141, "wordWrap": true, "width": 255, "var": "textcont", "valign": "middle", "text": "赏赐对方5个巴掌可获得500金币", "overflow": "hidden", "name": "textcont", "height": 159, "fontSize": 30, "font": "Arial", "color": "#e6ef0b", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": 622, "x": 79, "skin": "index/hand.png" } }, { "type": "Image", "props": { "y": 162, "x": 325, "width": 50, "skin": "index/LeadName.png", "height": 282 } }, { "type": "Text", "props": { "y": 153, "x": 330, "wordWrap": true, "width": 40, "valign": "middle", "text": "点击人物开始攻击", "overflow": "visible", "height": 300, "fontSize": 25, "font": "Arial", "color": "#4f2823", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": 576, "x": 53, "skin": "index/biankuang.png" } }] }, { "type": "Image", "props": { "y": 305, "x": 586, "var": "close_Btn", "skin": "index/close.png", "name": "close_Btn", "anchorY": 0.5, "anchorX": 0.5 } }] };
         return BattleUI;
     }(Dialog));
     ui.BattleUI = BattleUI;
+})(ui || (ui = {}));
+(function (ui) {
+    var InvitingfriendsUI = /** @class */ (function (_super) {
+        __extends(InvitingfriendsUI, _super);
+        function InvitingfriendsUI() {
+            return _super.call(this) || this;
+        }
+        InvitingfriendsUI.prototype.createChildren = function () {
+            View.regComponent("Text", laya.display.Text);
+            _super.prototype.createChildren.call(this);
+            this.createView(ui.InvitingfriendsUI.uiView);
+        };
+        InvitingfriendsUI.uiView = { "type": "Dialog", "props": { "width": 750, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": -100, "x": -161, "width": 1107, "skin": "index/mask.png", "height": 1570, "alpha": 0.7 } }, { "type": "Image", "props": { "y": 632, "x": 371, "width": 569, "var": "content", "skin": "index/store_bg2.png", "name": "content", "height": 973, "anchorY": 0.5, "anchorX": 0.5 }, "child": [{ "type": "Image", "props": { "y": 94, "x": 46, "width": 472, "skin": "index/yuanbao_bg.png", "height": 93 } }, { "type": "Image", "props": { "y": 122, "x": 81, "width": 64, "skin": "index/yuanbao.png", "height": 39 } }, { "type": "Text", "props": { "y": 111, "x": 77, "width": 409, "valign": "middle", "text": "一大波金元宝在等着你", "overflow": "visible", "height": 60, "fontSize": 25, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "List", "props": { "y": 309, "x": 51, "width": 474, "var": "_list", "spaceY": 15, "spaceX": 20, "repeatY": 4, "repeatX": 1, "name": "_list", "height": 647 }, "child": [{ "type": "Box", "props": { "renderType": "render" }, "child": [{ "type": "Image", "props": { "skin": "index/line_bg.png" } }, { "type": "Image", "props": { "y": 15, "x": 12, "width": 94, "skin": "index/Leadbg.png", "height": 94 } }, { "type": "Text", "props": { "y": 44, "x": 115, "wordWrap": true, "width": 119, "var": "LeadName", "valign": "middle", "text": "邀请1位好友", "overflow": "hidden", "name": "LeadName", "height": 31, "fontSize": 18, "font": "Arial", "color": "#653e21", "bold": true, "align": "left" } }, { "type": "Button", "props": { "y": 34, "x": 293, "var": "btn_coin", "stateNum": 1, "skin": "index/receive.png", "name": "btn_coin" } }, { "type": "Image", "props": { "y": 8, "x": 20, "skin": "index/unknownman.png", "name": "Invisible" } }, { "type": "Image", "props": { "y": 81, "x": 110, "width": 110, "skin": "index/mask.png", "height": 28, "alpha": 0.1 } }, { "type": "Image", "props": { "y": 84, "x": 116, "width": 36, "skin": "index/yuanbao.png", "height": 22 } }, { "type": "Text", "props": { "y": 78, "x": 162, "wordWrap": true, "width": 87, "var": "coin", "valign": "middle", "text": "1000B", "overflow": "hidden", "name": "coin", "height": 31, "fontSize": 15, "font": "Arial", "color": "#653e21", "bold": true, "align": "left" } }] }] }, { "type": "Text", "props": { "y": 9, "x": 150, "width": 271, "valign": "middle", "text": "邀请好友", "overflow": "visible", "height": 60, "fontSize": 40, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": 194, "x": 228, "var": "shareBTN", "skin": "index/share.png", "name": "shareBTN" } }] }, { "type": "Image", "props": { "y": 203, "x": 641, "var": "close_Btn", "skin": "index/close.png", "name": "close_Btn", "anchorY": 0.5, "anchorX": 0.5 } }] };
+        return InvitingfriendsUI;
+    }(Dialog));
+    ui.InvitingfriendsUI = InvitingfriendsUI;
 })(ui || (ui = {}));
 (function (ui) {
     var LuckdrawUI = /** @class */ (function (_super) {
@@ -49865,6 +50364,22 @@ var ui;
     ui.LuckdrawUI = LuckdrawUI;
 })(ui || (ui = {}));
 (function (ui) {
+    var SignUI = /** @class */ (function (_super) {
+        __extends(SignUI, _super);
+        function SignUI() {
+            return _super.call(this) || this;
+        }
+        SignUI.prototype.createChildren = function () {
+            View.regComponent("Text", laya.display.Text);
+            _super.prototype.createChildren.call(this);
+            this.createView(ui.SignUI.uiView);
+        };
+        SignUI.uiView = { "type": "Dialog", "props": { "width": 750, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": -90, "x": -151, "width": 1107, "skin": "index/mask.png", "height": 1570, "alpha": 0.7 } }, { "type": "Image", "props": { "y": 642, "x": 381, "width": 569, "var": "content", "skin": "index/store_bg2.png", "name": "content", "height": 973, "anchorY": 0.5, "anchorX": 0.5 }, "child": [{ "type": "List", "props": { "y": 89, "x": 49, "width": 474, "var": "_list", "spaceY": 60, "spaceX": 0, "repeatY": 3, "repeatX": 1, "name": "_list", "height": 859 }, "child": [{ "type": "Box", "props": { "y": 24, "x": -1, "width": 474, "renderType": "render", "height": 235 }, "child": [{ "type": "Image", "props": { "y": 65, "x": 0, "skin": "index/line_bg.png" } }, { "type": "Button", "props": { "y": 96, "x": 337, "var": "btn_coin", "stateNum": 2, "skin": "index/receive2.png", "name": "btn_coin" } }, { "type": "Image", "props": { "y": 101, "x": 25, "skin": "index/yuanbao3.png" } }, { "type": "Text", "props": { "y": 114, "x": 147, "wordWrap": true, "width": 150, "var": "title", "valign": "middle", "text": "恭喜小主", "overflow": "hidden", "name": "title", "height": 42, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": 12, "x": 27, "var": "titlebg", "skin": "index/line2.png", "name": "titlebg" } }, { "type": "Text", "props": { "y": 13, "x": 156, "wordWrap": true, "width": 150, "var": "days", "valign": "middle", "text": "第1天", "overflow": "hidden", "name": "days", "height": 42, "fontSize": 30, "font": "Arial", "color": "#633d26", "bold": true, "align": "center" } }] }] }, { "type": "Text", "props": { "y": 9, "x": 150, "width": 271, "valign": "middle", "text": "签到", "overflow": "visible", "height": 60, "fontSize": 40, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }] }, { "type": "Image", "props": { "y": 213, "x": 651, "var": "close_Btn", "skin": "index/close.png", "name": "close_Btn", "anchorY": 0.5, "anchorX": 0.5 } }] };
+        return SignUI;
+    }(Dialog));
+    ui.SignUI = SignUI;
+})(ui || (ui = {}));
+(function (ui) {
     var alertUI = /** @class */ (function (_super) {
         __extends(alertUI, _super);
         function alertUI() {
@@ -49875,7 +50390,7 @@ var ui;
             _super.prototype.createChildren.call(this);
             this.createView(ui.alertUI.uiView);
         };
-        alertUI.uiView = { "type": "Dialog", "props": { "width": 750, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": -110, "x": -171, "width": 1107, "skin": "index/mask.png", "height": 1570, "alpha": 0.7 } }, { "type": "Image", "props": { "y": 622, "x": 361, "var": "content", "skin": "index/tips_bg.png", "name": "content", "anchorY": 0.5, "anchorX": 0.5 }, "child": [{ "type": "Text", "props": { "y": 8, "x": 131, "width": 300, "var": "title", "valign": "middle", "text": "离线收益", "name": "title", "height": 60, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": 201, "x": 229, "width": 105, "var": "icon", "skin": "index/copper2.png", "name": "icon", "height": 105 } }, { "type": "Text", "props": { "y": 330, "x": 16, "width": 537, "var": "contentText", "valign": "middle", "text": "1000D", "name": "contentText", "height": 78, "fontSize": 50, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Text", "props": { "y": 101, "x": 68, "wordWrap": true, "width": 444, "var": "tipsText", "valign": "middle", "text": "在您离线时获得", "overflow": "hidden", "name": "tipsText", "height": 78, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }] }, { "type": "Image", "props": { "y": 410, "x": 621, "var": "close_Btn", "skin": "index/close.png", "name": "close_Btn", "anchorY": 0.5, "anchorX": 0.5 } }] };
+        alertUI.uiView = { "type": "Dialog", "props": { "width": 750, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": -110, "x": -171, "width": 1107, "skin": "index/mask.png", "height": 1570, "alpha": 0.7 } }, { "type": "Image", "props": { "y": 622, "x": 361, "var": "content", "skin": "index/tips_bg.png", "name": "content", "anchorY": 0.5, "anchorX": 0.5 }, "child": [{ "type": "Text", "props": { "y": 8, "x": 131, "width": 300, "var": "title", "valign": "middle", "text": "离线收益", "name": "title", "height": 60, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": 201, "x": 229, "width": 105, "var": "icon", "skin": "index/copper2.png", "name": "icon", "height": 105 } }, { "type": "Text", "props": { "y": 330, "x": 16, "width": 537, "var": "contentText", "valign": "middle", "name": "contentText", "height": 78, "fontSize": 50, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Text", "props": { "y": 101, "x": 68, "wordWrap": true, "width": 444, "var": "tipsText", "valign": "middle", "text": "在您离线时获得", "overflow": "hidden", "name": "tipsText", "height": 78, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }] }, { "type": "Image", "props": { "y": 410, "x": 621, "var": "close_Btn", "skin": "index/close.png", "name": "close_Btn", "anchorY": 0.5, "anchorX": 0.5 } }] };
         return alertUI;
     }(Dialog));
     ui.alertUI = alertUI;
@@ -49891,7 +50406,7 @@ var ui;
             _super.prototype.createChildren.call(this);
             this.createView(ui.indexUI.uiView);
         };
-        indexUI.uiView = { "type": "View", "props": { "width": 720, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 2, "skin": "index/bg.png", "name": "bg" } }, { "type": "Image", "props": { "y": 554, "x": 351, "width": 361, "skin": "index/select.png", "height": 518 } }, { "type": "Image", "props": { "y": 587, "x": 378, "width": 100, "var": "pool1", "skin": "index/Leadbg.png", "name": "pool1", "height": 100 } }, { "type": "Image", "props": { "y": 587, "x": 487, "width": 100, "var": "pool2", "skin": "index/Leadbg.png", "name": "pool2", "height": 100 } }, { "type": "Image", "props": { "y": 587, "x": 595, "width": 100, "var": "pool3", "skin": "index/Leadbg.png", "name": "pool3", "height": 100 } }, { "type": "Image", "props": { "y": 698, "x": 378, "width": 100, "var": "pool4", "skin": "index/Leadbg.png", "name": "pool4", "height": 100 } }, { "type": "Image", "props": { "y": 698, "x": 487, "width": 100, "var": "pool5", "skin": "index/Leadbg.png", "name": "pool5", "height": 100 } }, { "type": "Image", "props": { "y": 698, "x": 595, "width": 100, "var": "pool6", "skin": "index/Leadbg.png", "name": "pool6", "height": 100 } }, { "type": "Image", "props": { "y": 813, "x": 378, "width": 100, "var": "pool7", "skin": "index/Leadbg.png", "name": "pool7", "height": 100 } }, { "type": "Image", "props": { "y": 813, "x": 487, "width": 100, "var": "pool8", "skin": "index/Leadbg.png", "name": "pool8", "height": 100 } }, { "type": "Image", "props": { "y": 813, "x": 595, "width": 100, "var": "pool9", "skin": "index/Leadbg.png", "name": "pool9", "height": 100 } }, { "type": "Image", "props": { "y": 929, "x": 378, "width": 100, "var": "pool10", "skin": "index/Leadbg.png", "name": "pool10", "height": 100 } }, { "type": "Image", "props": { "y": 929, "x": 487, "width": 100, "var": "pool11", "skin": "index/Leadbg.png", "name": "pool11", "height": 100 } }, { "type": "Image", "props": { "y": 929, "x": 595, "width": 100, "var": "pool12", "skin": "index/Leadbg.png", "name": "pool12", "height": 100 } }, { "type": "Image", "props": { "y": 0, "x": 2, "width": 720, "var": "AnimationPool", "name": "AnimationPool", "height": 550 } }, { "type": "Image", "props": { "y": 584, "x": 5, "var": "palace", "skin": "index/lenggong.png" } }, { "type": "Image", "props": { "y": 1189, "x": 9, "var": "recovery", "skin": "index/delect.png", "name": "recovery" } }, { "type": "Button", "props": { "y": 1117, "x": 345, "width": 248, "var": "purchase", "stateNum": 2, "skin": "index/btn1.png", "name": "purchase", "height": 117 } }, { "type": "Image", "props": { "y": 1182, "x": 116, "skin": "index/recovery.png" } }, { "type": "Image", "props": { "y": 1057, "x": 213, "width": 111, "var": "Luckdraw", "skin": "index/invite.png", "name": "Luckdraw", "height": 111 } }, { "type": "Image", "props": { "y": 967, "x": 126, "skin": "index/rank.png" } }, { "type": "Button", "props": { "y": 1117, "x": 601, "width": 115, "var": "shop", "stateNum": 2, "skin": "index/btn2.png", "name": "shop", "height": 115 } }, { "type": "Image", "props": { "y": 21, "x": 16, "skin": "index/yuanbao_bg.png" } }, { "type": "Image", "props": { "y": 33, "x": 37, "skin": "index/yuanbao.png" } }, { "type": "Image", "props": { "y": 27, "x": 194, "width": 43, "skin": "index/add2.png", "height": 43 } }, { "type": "Image", "props": { "y": 21, "x": 462, "skin": "index/yuanbao_bg.png" } }, { "type": "Image", "props": { "y": 30, "x": 482, "width": 38, "skin": "index/copper2.png", "height": 38 } }, { "type": "Image", "props": { "y": 28, "x": 640, "width": 43, "skin": "index/add2.png", "height": 43 } }, { "type": "Text", "props": { "y": 110, "x": 325, "var": "coinspeed", "text": "0/秒", "name": "coinspeed", "fontSize": 35, "font": "Arial", "color": "#fff5e2", "bold": true } }, { "type": "Image", "props": { "y": 93, "x": 235, "skin": "index/copper2.png" } }, { "type": "Text", "props": { "y": 31, "x": 97, "var": "_Diamonds", "text": "100", "name": "_Diamonds", "fontSize": 30, "font": "Arial", "color": "#fff5e2", "bold": true } }, { "type": "Text", "props": { "y": 32, "x": 530, "var": "coin", "text": "100", "name": "coin", "fontSize": 30, "font": "Arial", "color": "#fff5e2", "bold": true } }, { "type": "Text", "props": { "y": 1189, "x": 415, "width": 155, "var": "purchase_text", "text": "1.8888B", "name": "purchase_text", "height": 25, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true } }, { "type": "Image", "props": { "y": 1053, "x": 26, "width": 106, "var": "turntable", "skin": "index/luck.png", "name": "turntable", "height": 114 } }] };
+        indexUI.uiView = { "type": "View", "props": { "width": 720, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "skin": "index/bg.png", "name": "bg" } }, { "type": "Image", "props": { "y": 547, "x": 203, "skin": "index/select.png" } }, { "type": "Image", "props": { "y": 575, "x": 233, "width": 150, "var": "pool1", "skin": "index/Leadbg.png", "name": "pool1", "height": 120 } }, { "type": "Image", "props": { "y": 575, "x": 391, "width": 150, "var": "pool2", "skin": "index/Leadbg.png", "name": "pool2", "height": 120 } }, { "type": "Image", "props": { "y": 575, "x": 548, "width": 150, "var": "pool3", "skin": "index/Leadbg.png", "name": "pool3", "height": 120 } }, { "type": "Image", "props": { "y": 710, "x": 233, "width": 150, "var": "pool4", "skin": "index/Leadbg.png", "name": "pool4", "height": 120 } }, { "type": "Image", "props": { "y": 710, "x": 391, "width": 150, "var": "pool5", "skin": "index/Leadbg.png", "name": "pool5", "height": 120 } }, { "type": "Image", "props": { "y": 710, "x": 548, "width": 150, "var": "pool6", "skin": "index/Leadbg.png", "name": "pool6", "height": 120 } }, { "type": "Image", "props": { "y": 844, "x": 233, "width": 150, "var": "pool7", "skin": "index/Leadbg.png", "name": "pool7", "height": 120 } }, { "type": "Image", "props": { "y": 844, "x": 391, "width": 150, "var": "pool8", "skin": "index/Leadbg.png", "name": "pool8", "height": 120 } }, { "type": "Image", "props": { "y": 844, "x": 548, "width": 150, "var": "pool9", "skin": "index/Leadbg.png", "name": "pool9", "height": 120 } }, { "type": "Image", "props": { "y": 979, "x": 233, "width": 150, "var": "pool10", "skin": "index/Leadbg.png", "name": "pool10", "height": 120 } }, { "type": "Image", "props": { "y": 979, "x": 391, "width": 150, "var": "pool11", "skin": "index/Leadbg.png", "name": "pool11", "height": 120 } }, { "type": "Image", "props": { "y": 979, "x": 548, "width": 150, "var": "pool12", "skin": "index/Leadbg.png", "name": "pool12", "height": 120 } }, { "type": "Image", "props": { "y": 0, "x": 0, "width": 720, "var": "AnimationPool", "name": "AnimationPool", "height": 550 } }, { "type": "Image", "props": { "y": 552, "x": 9, "var": "palace", "skin": "index/lenggong.png", "name": "palace" } }, { "type": "Image", "props": { "y": 1147, "x": 47, "width": 92, "var": "recovery", "skin": "index/delect.png", "name": "recovery", "height": 111 } }, { "type": "Button", "props": { "y": 1150, "x": 343, "width": 248, "var": "purchase", "stateNum": 2, "skin": "index/btn1.png", "name": "purchase", "height": 117 } }, { "type": "Image", "props": { "y": 1159, "x": 203, "skin": "index/recovery.png" } }, { "type": "Image", "props": { "y": 1018, "x": 34, "width": 118, "var": "Luckdraw", "skin": "index/invite.png", "name": "Luckdraw", "height": 118 } }, { "type": "Image", "props": { "y": 719, "x": 43, "width": 100, "skin": "index/rank.png", "height": 143 } }, { "type": "Button", "props": { "y": 1150, "x": 601, "width": 115, "var": "shop", "stateNum": 2, "skin": "index/btn2.png", "name": "shop", "height": 115 } }, { "type": "Image", "props": { "y": 21, "x": 16, "skin": "index/yuanbao_bg.png" } }, { "type": "Image", "props": { "y": 33, "x": 32, "skin": "index/yuanbao.png" } }, { "type": "Image", "props": { "y": 27, "x": 195, "width": 43, "var": "addcoin", "skin": "index/add2.png", "name": "addcoin", "height": 43 } }, { "type": "Image", "props": { "y": 20, "x": 265, "skin": "index/yuanbao_bg.png" } }, { "type": "Image", "props": { "y": 29, "x": 284, "width": 38, "skin": "index/copper2.png", "height": 38 } }, { "type": "Image", "props": { "y": 26, "x": 443, "width": 43, "var": "addmoney", "skin": "index/add2.png", "name": "addmoney", "height": 43 } }, { "type": "Text", "props": { "y": 110, "x": 325, "var": "coinspeed", "text": "0/秒", "name": "coinspeed", "fontSize": 35, "font": "Arial", "color": "#653e21", "bold": true } }, { "type": "Image", "props": { "y": 107, "x": 265, "width": 46, "skin": "index/copper2.png", "height": 46 } }, { "type": "Text", "props": { "y": 31, "x": 85, "width": 107, "var": "_Diamonds", "text": "8.888B", "name": "_Diamonds", "height": 30, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Text", "props": { "y": 31, "x": 326, "width": 113, "var": "coin", "text": "8.888B", "name": "coin", "height": 30, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Text", "props": { "y": 1226, "x": 418, "width": 155, "var": "purchase_text", "text": "1.8888B", "name": "purchase_text", "height": 25, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true } }, { "type": "Image", "props": { "y": 878, "x": 33, "width": 120, "var": "turntable", "skin": "index/luck.png", "name": "turntable", "height": 129 } }, { "type": "Image", "props": { "y": 201, "x": 146, "width": 421, "var": "adminrange", "name": "adminrange", "height": 169 } }, { "type": "Image", "props": { "y": 91, "x": 27, "skin": "index/yuhuayuan.png" } }, { "type": "Box", "props": { "y": 495, "x": 189, "var": "adminList", "name": "adminList" }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "var": "adminList1", "skin": "index/weizhi2.png", "name": "adminList1" } }, { "type": "Image", "props": { "y": 0, "x": 72, "var": "adminList2", "skin": "index/weizhi2.png", "name": "adminList2" } }, { "type": "Image", "props": { "y": 0, "x": 144, "var": "adminList3", "skin": "index/weizhi2.png", "name": "adminList3" } }, { "type": "Image", "props": { "y": 0, "x": 216, "var": "adminList4", "skin": "index/weizhi2.png", "name": "adminList4" } }, { "type": "Image", "props": { "y": 0, "x": 288, "var": "adminList5", "skin": "index/weizhi2.png", "name": "adminList5" } }] }] };
         return indexUI;
     }(View));
     ui.indexUI = indexUI;
@@ -49955,7 +50470,7 @@ var ui;
             _super.prototype.createChildren.call(this);
             this.createView(ui.reward2UI.uiView);
         };
-        reward2UI.uiView = { "type": "Dialog", "props": { "width": 750, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": -100, "x": -161, "width": 1107, "skin": "index/mask.png", "height": 1570, "alpha": 0.7 } }, { "type": "Image", "props": { "y": 632, "x": 371, "var": "content", "name": "content", "anchorY": 0.5, "anchorX": 0.5 }, "child": [{ "type": "Image", "props": { "y": -206, "x": 5, "width": 413, "var": "Light", "skin": "index/yuanb_bg.png", "rotation": 0, "pivotY": 196, "pivotX": 204, "name": "Light", "height": 406 } }, { "type": "Text", "props": { "y": 42, "x": -370, "width": 750, "var": "reward", "valign": "middle", "text": "获得1000个金币", "strokeColor": "#101010", "stroke": 8, "pivotY": 0.5, "pivotX": 0.5, "name": "reward", "height": 70, "fontSize": 30, "font": "Arial", "color": "#fffde3", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": -250, "x": -95, "skin": "index/money.png" } }] }, { "type": "Image", "props": { "y": 840, "x": 386, "var": "close_Btn", "skin": "index/btnsure.png", "name": "close_Btn", "anchorY": 0.5, "anchorX": 0.5 } }] };
+        reward2UI.uiView = { "type": "Dialog", "props": { "width": 750, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": -100, "x": -156, "width": 1107, "skin": "index/mask.png", "height": 1570, "alpha": 0.7 } }, { "type": "Image", "props": { "y": 635, "x": 371, "var": "content", "name": "content", "anchorY": 0.5, "anchorX": 0.5 }, "child": [{ "type": "Image", "props": { "y": -206, "x": 5, "width": 413, "var": "Light", "skin": "index/yuanb_bg.png", "rotation": 0, "pivotY": 196, "pivotX": 204, "name": "Light", "height": 406 } }, { "type": "Text", "props": { "y": 42, "x": -370, "width": 750, "var": "reward", "valign": "middle", "strokeColor": "#101010", "stroke": 8, "pivotY": 0.5, "pivotX": 0.5, "name": "reward", "height": 70, "fontSize": 30, "font": "Arial", "color": "#fffde3", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": -232, "x": -32, "var": "proptype", "skin": "index/jiangquan.png", "name": "proptype" } }] }, { "type": "Image", "props": { "y": 840, "x": 386, "var": "close_Btn", "skin": "index/btnsure.png", "name": "close_Btn", "anchorY": 0.5, "anchorX": 0.5 } }] };
         return reward2UI;
     }(Dialog));
     ui.reward2UI = reward2UI;

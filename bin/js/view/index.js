@@ -1,6 +1,7 @@
 var GAME;
 (function (GAME) {
     var index = /** @class */ (function () {
+        // https://shop.yunfanshidai.com/xcxht/qinggong/
         function index() {
             //  玩家数据
             this.GameInfo = {
@@ -8,15 +9,31 @@ var GAME;
                 coin: "0",
                 diamonds: "0",
                 volum: 0,
-                speed: 0,
+                speed: "0",
                 grade: 1,
                 role_level: 1,
             };
+            var self = this;
             Laya.loader.load([
                 "https://shop.yunfanshidai.com/xcxht/qinggong/res/atlas/index.atlas",
                 "https://shop.yunfanshidai.com/xcxht/qinggong/res/atlas/Lead.atlas",
                 "https://shop.yunfanshidai.com/xcxht/qinggong/res/atlas/Enemy.atlas",
-            ], Laya.Handler.create(this, this.init), Laya.Handler.create(this, this.onProgress, null, false));
+            ], Laya.Handler.create(this, function () {
+                if (!window["wx"]) {
+                    self.init("", "https://shop.yunfanshidai.com/xcxht/qinggong/api/login_test.php");
+                }
+                else {
+                    window["wx"].login({
+                        success: function (data) {
+                            console.log(data);
+                            self.init(data.code, "https://shop.yunfanshidai.com/xcxht/qinggong/api/login.php");
+                        },
+                        fail: function (err) {
+                            tips("请授权");
+                        }
+                    });
+                }
+            }), Laya.Handler.create(this, this.onProgress, null, false));
             window["___index"] = this;
             window["GameInfo"] = this.GameInfo;
         }
@@ -24,7 +41,7 @@ var GAME;
             var bar2 = window["loginUI"].getChildByName("bar2");
             bar2.scale(pro, 1);
         };
-        index.prototype.init = function () {
+        index.prototype.init = function (code, url) {
             var _this = this;
             window.setTimeout(function () {
                 window["loginUI"].destroy();
@@ -33,7 +50,10 @@ var GAME;
             this.indexUI = new ui.indexUI;
             Laya.stage.addChild(this.indexUI);
             // 加载用户数据
-            Ajax("GET", "https://shop.yunfanshidai.com/xcxht/qinggong/api/login.php", null, function (data) {
+            Ajax("GET", url, {
+                code: code,
+                scene: 0
+            }, function (data) {
                 if (data['status'] === "fail") {
                     console.log("登陆失败");
                 }
@@ -41,11 +61,17 @@ var GAME;
                     _this.customEvent(); // 自定义事件
                     _this.staticObj(); // 静态化常用变量
                     console.log(data);
-                    // 收益弹框
-                    var alertUI_1 = init_alert(ui.alertUI, function () {
-                        var text = alertUI_1.getChildByName("content").getChildByName("contentText");
-                        text.text = (!!data.offline) ? data.offline : "0个金元宝";
-                    });
+                    // 非新用户显示离线收益与签到
+                    if (data.isnew.toString() === "2") {
+                        // 收益弹框
+                        var alertUI_1 = init_alert(ui.alertUI, function () {
+                            var text = alertUI_1.getChildByName("content").getChildByName("contentText");
+                            text.text = (!!data.offline) ? data.offline + "\u4E2A\u91D1\u5E01" : "0个金币";
+                        }, function () {
+                            // 签到
+                            (!!data["issign"] && data["issign"] === "1") ? _this.Signin(data["signdays"]) : console.log("已签到");
+                        });
+                    }
                     // 玩家ID
                     (!!data.openid) ? _this.GameInfo.userid = data.openid : console.log("无玩家id数据");
                     LeadInfo.openID = data.openid;
@@ -61,13 +87,12 @@ var GAME;
                     (!!data.diamonds) ? Laya.stage.event("diamondsSet", data.diamonds) : console.log("无金元宝或无该数据");
                     // 创建游戏主角 
                     (!!data.rolelist) ? _this.Lead(data.rolelist) : console.log("无法获取主角信息");
-                    // 冷宫列表
-                    // (!!data.lglist) ? LeadInfo.palaceList = data.lglist : console.log("无法获取冷宫列表");
                     // 商店列表
                     (!!data.lockinfo) ? LeadInfo.locklist = data.lockinfo : console.log("无法获取商店列表");
                     _this.turntable = new GAME.turntable(); // 转盘模块
                     _this.shop = new GAME.shop(LeadInfo.locklist); // 商店模块
                     _this.palace = new GAME.palace(); // 冷宫模块
+                    _this.course = new GAME.Course(_this.indexUI); // 新手引导
                     _this.event(); // 事件监听
                     _this.updateshopBtn(); // 更新购买按钮价格
                     window["_audio"].onBGM();
@@ -78,10 +103,88 @@ var GAME;
                     // 抽奖券
                     window.setInterval(function () {
                         Laya.stage.event("volumAdd", 1);
-                    }, 30000);
+                    }, 1800000);
+                    // 新手指引
+                    // (!!data.isnew && data.isnew.toString() === '1') ? this.course.open() : console.log("非新用户");
                 }
             }, function (err) {
                 console.log(err, "无法请求数据");
+                tips("获取不到您的信息");
+            });
+        };
+        // 签到
+        index.prototype.Signin = function (day) {
+            var _this = this;
+            for (var i = 0; i < day; i++) {
+                signdays[i].type = true;
+            }
+            if (!!signdays[Number(day)])
+                signdays[Number(day)]["open"] = true;
+            var data = signdays;
+            var targetUI = init_alert(ui.SignUI);
+            var target = targetUI._list;
+            target.vScrollBarSkin = '';
+            target.array = data;
+            target.scrollBar.elasticBackTime = 500;
+            target.scrollBar.elasticDistance = 100;
+            target.renderHandler = new Laya.Handler(this, function (cell, index) {
+                if (index > data.length)
+                    return;
+                var userdata = data[index];
+                var days = cell.getChildByName("days");
+                (userdata["open"]) ? days.color = "#33c0dc" : days.color = "#633d26";
+                days.text = "\u7B2C" + userdata.day + "\u5929";
+                var title = cell.getChildByName("title");
+                (userdata.type) ? title.text = "\u5DF2\u9886\u53D6\u5956\u52B1" : title.text = "\u5409\u65F6\u672A\u5230";
+                var titlebg = cell.getChildByName("titlebg");
+                (userdata["open"]) ? titlebg.skin = "index/today_line.png" : titlebg.skin = "index/line2.png";
+                var btn_coin = cell.getChildByName("btn_coin");
+                if (userdata["open"]) {
+                    btn_coin.disabled = false;
+                    addClick(btn_coin, function () {
+                        Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/usersign.php", {
+                            openid: LeadInfo.openID,
+                        }, function (data) {
+                            Propalert(userdata.Prop.type, userdata.Prop.title); // 道具弹窗
+                            // data[index]["open"] = false;
+                            targetUI._close();
+                        }, function (err) {
+                            tips("签到失败");
+                        });
+                    }, _this, true);
+                }
+                else {
+                    btn_coin.offAll(Laya.Event.CLICK);
+                    btn_coin.disabled = true;
+                }
+            });
+        };
+        // 邀请好友
+        index.prototype.shared = function () {
+            var _this = this;
+            var data = shareddata;
+            var targetUI = init_alert(ui.InvitingfriendsUI);
+            var target = targetUI._list;
+            var BTN = targetUI.getChildByName("content").getChildByName("shareBTN");
+            addClick(BTN, function () {
+                window["shareBTN"];
+                console.log("分享");
+            }, this, true);
+            target.vScrollBarSkin = '';
+            target.array = data;
+            target.scrollBar.elasticBackTime = 500;
+            target.scrollBar.elasticDistance = 100;
+            target.renderHandler = new Laya.Handler(this, function (cell, index) {
+                if (index > data.length)
+                    return;
+                var userdata = data[index];
+                var LeadName = cell.getChildByName("LeadName");
+                LeadName.text = "\u9080\u8BF7" + userdata.size + "\u4F4D\u597D\u53CB";
+                var coin = cell.getChildByName("coin");
+                coin.text = "" + userdata.jinyunbao;
+                addClick(cell.getChildByName("btn_coin"), function () {
+                    tips("未成功邀请好友");
+                }, _this, true);
             });
         };
         // 常用对象静态化
@@ -114,6 +217,18 @@ var GAME;
             addClick(this.indexUI.recovery, function () {
                 tips("请拖动人物到此处");
             }, this, true);
+            // 邀请好友
+            addClick(this.indexUI.Luckdraw, function () {
+                _this.shared();
+            });
+            // 获取金元宝
+            addClick(this.indexUI.addmoney, function () {
+                _this.shared();
+            });
+            // 获取金币
+            addClick(this.indexUI.addcoin, function () {
+                _this.shared();
+            });
         };
         // 自定事件
         index.prototype.customEvent = function () {
@@ -208,16 +323,45 @@ var GAME;
                 }, function (err) {
                 });
             });
-            // 金币速度更改
+            // 金币速度更改 1 加 2 减
             Laya.stage.on("speedSet", this, function (e) {
-                _this.GameInfo.speed += e;
-                if (_this.GameInfo.speed <= 0)
-                    _this.GameInfo.speed = 0;
-                _this._coinspeed.text = Format(Math.floor(_this.GameInfo.speed).toString()) + "/\u79D2";
+                console.log(e);
+                var a;
+                if (e.type === 1) {
+                    a = addition(_this.GameInfo.speed, e.value);
+                }
+                else if (e.type === 2) {
+                    a = subtraction(_this.GameInfo.speed, e.value);
+                }
+                if (a.slice(0, 1) === "-") {
+                    _this.GameInfo.speed = "0";
+                    _this._coinspeed.text = 0 + "/\u79D2";
+                }
+                else {
+                    _this.GameInfo.speed = a;
+                    _this._coinspeed.text = Format(a) + "/\u79D2";
+                }
             });
             // 创建新主角
             Laya.stage.on("LeadCreate", this, function (e) {
                 new GAME.lead(e, _this.indexUI);
+            });
+            // 动画池管理
+            Laya.stage.on("adminpool", this, function (e) {
+                adminPool.child += e;
+                if (adminPool.child >= adminPool.maxLength)
+                    adminPool.child = adminPool.maxLength;
+                if (adminPool.child <= 0)
+                    adminPool.child = 0;
+                for (var i = adminPool.maxLength; i--; i) {
+                    var target = _this.indexUI.getChildByName("adminList").getChildByName("adminList" + (i + 1));
+                    if (i < adminPool.child) {
+                        target.skin = "index/weizhi1.png";
+                    }
+                    else {
+                        target.skin = "index/weizhi2.png";
+                    }
+                }
             });
         };
         // 批量创建主角对象
@@ -229,7 +373,7 @@ var GAME;
                 }
             }
         };
-        // 更新快速购买按钮价格
+        // 快速购买按钮 显示
         index.prototype.updateshopBtn = function () {
             var _this = this;
             var Leadprice = 0; // 当前主角价格
@@ -243,20 +387,22 @@ var GAME;
         // 主角购买
         index.prototype.leadshop = function () {
             var _this = this;
+            if (LeadInfo.Leadlist >= 12) {
+                tips("后宫已满");
+                return;
+            }
+            // 自动购买当前解锁最高的主角
             var Leadprice = 0; // 当前主角价格
             LeadInfo.locklist.forEach(function (item, index) {
                 if (item.grade === String(_this.GameInfo.role_level)) {
                     Leadprice = item.price;
                 }
             });
-            if (LeadInfo.Leadlist >= 12) {
-                tips("后宫已满");
-                return;
-            }
             if (this.GameInfo.coin === "0" || !ContrastNumber(this.GameInfo.coin, Leadprice)) {
                 tips("金币不足");
                 return;
             }
+            window["_audio"]._Sound("buy"); // 购买音效
             Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/buyrole.php", {
                 openid: this.GameInfo.userid,
                 grade: this.GameInfo.role_level // 购买等级
@@ -273,11 +419,11 @@ var GAME;
                     };
                     new GAME.lead(user, _this.indexUI);
                 }
-                // 用户剩余金币
                 var coin = data.coin;
-                Laya.stage.event("MoneySet", coin);
-                _this.updateshopBtn(); // 更新价格
-                tips("购买成功");
+                Laya.stage.event("MoneySet", coin); // 用户剩余金币
+                Laya.stage.event("locklistSet", { grade: data.grade, value: data.price }); // 更新商店价格
+                // this.updateshopBtn();// 更新价格
+                // tips("购买成功");
             }, function (err) {
                 tips("购买失败");
             });
@@ -295,12 +441,12 @@ var GAME;
             // 回收矩阵
             collision.push(getMatrix(this.indexUI.getChildByName("recovery")));
             // 动画运动范围
-            var AnimationPool = this.indexUI.getChildByName("AnimationPool");
+            var AnimationPool = this.indexUI.getChildByName("adminrange");
             adminPool.Range = {
                 startX: AnimationPool.x,
-                startY: AnimationPool.y + AnimationPool.height / 2,
-                endX: AnimationPool.x + AnimationPool.width - LeadInfo.width / 2,
-                endY: AnimationPool.y + AnimationPool.height - LeadInfo.height,
+                startY: AnimationPool.y,
+                endX: AnimationPool.x + AnimationPool.width,
+                endY: AnimationPool.y + AnimationPool.height,
                 target: AnimationPool
             };
         };

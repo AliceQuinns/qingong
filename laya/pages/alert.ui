@@ -2,7 +2,7 @@
     "x":0,
     "type":"Dialog",
     "selectedBox":3,
-    "selecteID":12,
+    "selecteID":11,
     "props":{"width":750,"sceneColor":"#ffffff","height":1280},
     "nodeParent":-1,
     "label":"Dialog",
@@ -66,7 +66,7 @@
                 {
                     "x":30,
                     "type":"Text",
-                    "props":{"y":330,"x":16,"width":537,"var":"contentText","valign":"middle","text":"1000D","name":"contentText","height":78,"fontSize":50,"font":"Arial","color":"#653e21","bold":true,"align":"center"},
+                    "props":{"y":330,"x":16,"width":537,"var":"contentText","valign":"middle","name":"contentText","height":78,"fontSize":50,"font":"Arial","color":"#653e21","bold":true,"align":"center"},
                     "nodeParent":3,
                     "label":"Text(contentText)",
                     "isDirectory":false,

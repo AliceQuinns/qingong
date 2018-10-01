@@ -43,6 +43,10 @@ module GAME {
                 radices: this.radices
             }, data => {
                 console.log(data);
+                if(!data){
+                    tips("抽奖过于频繁 请稍后重试");
+                    return;
+                };
                 let self = this;
 
                 let Result = Number(data.award) - 1;// 类型
@@ -79,8 +83,8 @@ module GAME {
         // 转盘动画
         private admin(target, angle, callback: Laya.Handler) {
             // 转动速度为2秒一圈 不论角度多少都要转2圈
-            let angles = angle + 720 + target.rotation;
-            let time = 4000 + angle / 360 * 2000;
+            let angles = angle + 1080 + target.rotation;
+            let time = 3000 + angle / 360 * 2000;
             Laya.Tween.to(target, { rotation: angles }, time, Laya.Ease.expoOut, callback, null);
         }
 

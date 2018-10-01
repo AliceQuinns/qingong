@@ -3,6 +3,7 @@ var GAME;
 (function (GAME) {
     var palace = /** @class */ (function () {
         function palace() {
+            this.bazdir = true; // 巴掌方向
         }
         // 开启冷宫模块
         palace.prototype.open = function () {
@@ -13,6 +14,10 @@ var GAME;
                 openid: LeadInfo.openID
             }, function (data) {
                 console.log(data);
+                if (data.status === "fail") {
+                    tips("冷宫还未解锁");
+                    return;
+                }
                 if (data.enemylist.length <= 0) {
                     tips("暂时没有敌人");
                 }
@@ -64,44 +69,28 @@ var GAME;
             var Lead = this.enemy.getChildByName("content").getChildByName("Lead"); // 人物
             Lead.skin = "Enemy/" + data.level + ".png";
             var textcont = this.enemy.getChildByName("content").getChildByName("textcont");
-            textcont.text = "\u8D4F\u8D50" + data.Leadname + "5\u4E2A\u5DF4\u638C \u5373\u53EF\u83B7\u5F97" + Format(data.coin) + "\u4E2A\u91D1\u5E01";
+            textcont.text = "\u6BCF\u8D4F\u8D50" + data.Leadname + "1\u4E2A\u5DF4\u638C \u5373\u53EF\u83B7\u5F97" + Format(data.coin) + "\u4E2A\u91D1\u5E01";
             addClick(Lead, function () {
-                console.log(data.coin);
                 _this.BattleAnimation(Lead, data.coin);
             }, this);
         };
         // 战斗动画
         palace.prototype.BattleAnimation = function (pos, money) {
-            var skeleton = new Laya.Skeleton();
-            pos.addChild(skeleton);
-            skeleton.pos(pos.x, pos.y + 50);
-            skeleton.load("https://shop.yunfanshidai.com/xcxht/qinggong/res/animation/hand.sk");
-            // 战斗抖动
-            var x = 10;
-            var y = 10;
-            var time = window.setInterval(function () {
-                Laya.stage.x += x;
-                Laya.stage.y += y;
-                x = -x;
-                y = -y;
-            }, 10);
-            var times;
-            window.setTimeout(function () {
-                Laya.stage.pos(0, 0);
-                skeleton.destroy();
-                window.clearInterval(time);
-                var _targetUI = init_alert(ui.reward2UI, function () {
-                    // 旋转光效
-                    var Light = _targetUI.getChildByName("content").getChildByName("Light");
-                    times = window.setInterval(function () {
-                        Light.rotation += 10;
-                    }, 50);
-                }, function () {
-                    Laya.stage.event("MoneyAdd", money);
-                    tips("\u5DF2\u83B7\u5F97" + Format(money) + " \u91D1\u5E01");
-                    window.clearInterval(times);
-                });
-            }, 3000);
+            // 短震动
+            shock(1);
+            // 攻击动画
+            attackadmin(pos, 100, { x: pos.x - pos.width / 2, y: pos.y - pos.height / 2 }, 0.01, this.bazdir);
+            this.bazdir = !this.bazdir;
+            // 窗口抖动
+            windowshack(2, 1, 300);
+            // 收益提示
+            tips(Format(money) + "\u91D1\u5E01", "coin", pos.x + pos.width * Math.random(), pos.y + pos.height * Math.random(), 200);
+            // 金币增加
+            Laya.stage.event("MoneyAdd", money);
+            // 主角缩放
+            scaleelastic(pos);
+            // 巴掌音效
+            window["_audio"]._Sound("slap");
         };
         return palace;
     }());

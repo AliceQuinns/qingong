@@ -32,6 +32,11 @@ var GAME;
                 radices: this.radices
             }, function (data) {
                 console.log(data);
+                if (!data) {
+                    tips("抽奖过于频繁 请稍后重试");
+                    return;
+                }
+                ;
                 var self = _this;
                 var Result = Number(data.award) - 1; // 类型
                 var title = data["content"]; // 剧情文本
@@ -59,8 +64,8 @@ var GAME;
         // 转盘动画
         turntable.prototype.admin = function (target, angle, callback) {
             // 转动速度为2秒一圈 不论角度多少都要转2圈
-            var angles = angle + 720 + target.rotation;
-            var time = 4000 + angle / 360 * 2000;
+            var angles = angle + 1080 + target.rotation;
+            var time = 3000 + angle / 360 * 2000;
             Laya.Tween.to(target, { rotation: angles }, time, Laya.Ease.expoOut, callback, null);
         };
         // 道具界面特效

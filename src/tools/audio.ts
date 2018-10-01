@@ -8,8 +8,8 @@ module GAME {
                 bgm: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/bgm.mp3",
                 money: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/coin.mp3",// 金币
                 slap: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/slap.mp3",// 巴掌
-                buy: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/buy.mp3",// 转盘
-                appear: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/appear.mp3",
+                buy: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/buy.mp3",// 购买音效
+                appear: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/appear.mp3",// 开始工作音效
             }
             this.audiopool = {};// 音频池
             this.status = true;// 全局音频控制

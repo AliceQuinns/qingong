@@ -95,6 +95,8 @@ module GAME {
                 tips("金币不足");
                 return;
             }
+
+            window["_audio"]._Sound("buy");// 购买音效
             
             Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/buyrole.php", {
                 openid: LeadInfo.openID,
@@ -119,8 +121,6 @@ module GAME {
                     Laya.stage.event("MoneySet", coin);// 修改剩余金币
 
                     Laya.stage.event("locklistSet", { grade: data.grade, value: data.price });// 更新商店价格
-
-                    tips("购买成功");
 
                 } else {
 
