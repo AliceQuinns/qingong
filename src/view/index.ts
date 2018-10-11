@@ -6,6 +6,7 @@ module GAME {
         private turntable;// 转盘模块
         private shop;// 商店模块
         private course;// 新手引导
+        private Audioctr = true;// 默认音效
 
         //  玩家数据
         private GameInfo = {
@@ -96,7 +97,7 @@ module GAME {
                         // 收益弹框
                         let alertUI = init_alert(ui.alertUI, () => {
                             let text = alertUI.getChildByName("content").getChildByName("contentText") as Laya.Text;
-                            text.text = (!!data.offline) ? `${data.offline}个金币` : "0个金币";
+                            text.text = (!!data.offline) ? `${Format(data.offline)}个金币` : "0个金币";
                         }, () => {
                             // 签到
                             (!!data["issign"] && data["issign"] === "1") ? this.Signin(data["signdays"]) : console.log("已签到");
@@ -131,7 +132,7 @@ module GAME {
                     this.turntable = new GAME.turntable();// 转盘模块
                     this.shop = new GAME.shop(LeadInfo.locklist);// 商店模块
                     this.palace = new GAME.palace();// 冷宫模块
-                    this.course = new GAME.Course(this.indexUI);// 新手引导
+                    this.course = new GAME.Course(this.indexUI,this);// 新手引导
 
                     this.event();// 事件监听
 
@@ -149,8 +150,13 @@ module GAME {
                         Laya.stage.event("volumAdd", 1);
                     }, 1800000);
 
+                    // 随机背景音效
+                    window.setInterval(()=>{
+                        window["_audio"].random();
+                    },50000);
+
                     // 新手指引
-                    // (!!data.isnew && data.isnew.toString() === '1') ? this.course.open() : console.log("非新用户");
+                    (!!data.isnew && data.isnew.toString() === '1') ? this.course.open() : console.log("非新用户");
                 }
             }, err => {
                 console.log(err, "无法请求数据");
@@ -269,6 +275,25 @@ module GAME {
             // 购买人物
             addClick(this.indexUI.purchase, () => {
                 this.leadshop();
+            })
+
+            // 帮助
+            addClick(this.indexUI.help,()=>{
+                init_alert(ui.helpUI);
+            })
+
+            // 音效
+            addClick(this.indexUI.audioCtr,()=>{
+                this.Audioctr = !this.Audioctr;
+                if(this.Audioctr){
+                    // 开启
+                    window["_audio"].control("open");
+                    this.indexUI.audioCtr.skin = "index/voice1.png";
+                }else{
+                    // 关闭
+                    window["_audio"].control("close");
+                    this.indexUI.audioCtr.skin = "index/voice2.png";
+                }
             })
 
             // 回收按钮

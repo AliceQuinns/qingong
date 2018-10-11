@@ -10,6 +10,10 @@ module GAME {
                 slap: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/slap.mp3",// 巴掌
                 buy: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/buy.mp3",// 购买音效
                 appear: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/appear.mp3",// 开始工作音效
+                audios1: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/audios1.mp3",
+                audios2: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/audios2.mp3",
+                audios3: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/audios3.mp3",
+                audios4: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/audios4.mp3",
             }
             this.audiopool = {};// 音频池
             this.status = true;// 全局音频控制
@@ -79,6 +83,11 @@ module GAME {
             } else if (type === "open") {
                 this.status = true;
             }
+        }
+
+        // 随机音效
+        random = () => {
+            this._Sound(`audios${getRandomInt(1,5)}`);
         }
     }
 }

@@ -2,7 +2,7 @@ window["WxModular"] = {
     // 主动分享 被动分享 群分享功能
     share: ()=>{
         wx.request({
-            url: 'https://shop.yunfanshidai.com/xcxht/slyxhz/api/share_info.php?gameid=8',
+            url: 'https://shop.yunfanshidai.com/xcxht/slyxhz/api/share_info.php?gameid=28',
             header: {
                 'content-type': 'application/json' // 默认值
             },

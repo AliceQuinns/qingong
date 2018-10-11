@@ -20,8 +20,8 @@ var GAME;
             this.cycle = (!!data.cycle) ? Number(data.cycle) : console.log("未获取到周期");
             this.range = adminPool.Range; // 动画边界
             this.speed = {
-                x: this.cycle / 2 / 1000,
-                y: this.cycle / 2 / 10000
+                x: this.cycle / 5 / 1000,
+                y: this.cycle / 5 / 10000
             };
             this.init();
         }
@@ -101,36 +101,46 @@ var GAME;
         // 升级
         lead.prototype.upgrade = function (datas) {
             var _this = this;
-            console.log("开始升级");
-            Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/composerole.php", {
-                openid: LeadInfo.openID,
-                role1: this.id,
-                role2: datas.id,
-                position: datas.pos,
-            }, function (data) {
+            var targetobjs;
+            if (datas.AdminTimer) {
+                targetobjs = datas.icon.child;
+            }
+            else {
+                targetobjs = datas.icon.parent;
+            }
+            this.icon.parent.y = targetobjs.y;
+            // 合体动画
+            upgradeAdmin(this.icon.parent, targetobjs, { x: targetobjs.x, y: targetobjs.y }, function () {
                 loveadmin(_this.stage, 350, { x: datas.position.x + 50, y: datas.position.y + 50 }); // 爱心动画
                 _this.delete();
                 datas.delete();
-                tips("升级成功");
-                var user = {
-                    roleid: data.roleid,
-                    grade: data.grade,
-                    iswork: data.iswork,
-                    position: data.position,
-                    wages: data.wages,
-                    cycle: data.cycle,
-                };
-                var newLead = new GAME.lead(user, _this.stage);
-                Laya.stage.event("Synthesis", newLead); // 发送合成事件
-                if (!!data.role_level)
-                    Laya.stage.event("rolelevelSet", data.role_level); // 更新人物解锁等级
-                if (!!data.islock && data.islock === 2) {
-                    console.log("人物解锁列表更新");
-                    _this.unlock(data.lockinfo, data.lockinfo.role_name);
-                }
-            }, function (err) {
-                tips("升级失败");
-                Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 100);
+                Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/composerole.php", {
+                    openid: LeadInfo.openID,
+                    role1: _this.id,
+                    role2: datas.id,
+                    position: datas.pos,
+                }, function (data) {
+                    tips("升级成功");
+                    var user = {
+                        roleid: data.roleid,
+                        grade: data.grade,
+                        iswork: data.iswork,
+                        position: data.position,
+                        wages: data.wages,
+                        cycle: data.cycle,
+                    };
+                    var newLead = new GAME.lead(user, _this.stage);
+                    // Laya.stage.event("Synthesis", newLead);// 发送合成事件
+                    if (!!data.role_level)
+                        Laya.stage.event("rolelevelSet", data.role_level); // 更新人物解锁等级
+                    if (!!data.islock && data.islock === 2) {
+                        console.log("人物解锁列表更新");
+                        _this.unlock(data.lockinfo, data.lockinfo.role_name);
+                    }
+                }, function (err) {
+                    tips("升级失败");
+                    Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 100);
+                });
             });
         };
         // 更换位置
@@ -192,7 +202,8 @@ var GAME;
         // 开始工作
         lead.prototype.work = function () {
             var _this = this;
-            window["_audio"]._Sound("appear");
+            // window["_audio"]._Sound("appear");
+            window["_audio"].random();
             Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/runrole.php", {
                 openid: LeadInfo.openID,
                 roleid: this.id

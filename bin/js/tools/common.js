@@ -515,6 +515,51 @@ var coinanimation = function (target, time, pos, playback) {
         skeleton.destroy();
     }, time);
 };
+// 移动动画
+var movePos = function (target, targetPos, endPos, frequency) {
+    Laya.Tween.clearAll(target);
+    // if(target["movestatus"])target["movestatus"] = false;
+    // target["movestatus"] = true;
+    // 记录次数
+    if (!target["frequency"])
+        target["frequency"] = 0;
+    if (target["frequency"] >= frequency) {
+        // target["movestatus"] = true;
+        target["frequency"] = 0;
+        return;
+    }
+    // 开始缓动
+    if (target["moveType"]) {
+        Laya.Tween.to(target, { x: targetPos.x, y: targetPos.y }, 1000, Laya.Ease.backInOut, Laya.Handler.create(_this, function () {
+            target["moveType"] = !target["moveType"];
+            target["frequency"] += 1;
+            movePos(target, targetPos, endPos, frequency);
+        }), null);
+        console.log("true");
+    }
+    else {
+        Laya.Tween.to(target, { x: endPos.x, y: endPos.y }, 1000, Laya.Ease.backInOut, Laya.Handler.create(_this, function () {
+            target["moveType"] = !target["moveType"];
+            target["frequency"] += 1;
+            movePos(target, targetPos, endPos, frequency);
+        }), null);
+        console.log("false");
+    }
+};
+// 升级动画
+var upgradeAdmin = function (targeA, targetB, pos, callback, office) {
+    if (office === void 0) { office = 50; }
+    // left_obj
+    Laya.Tween.to(targeA, { x: targeA.x + office }, 500, Laya.Ease.backInOut, Laya.Handler.create(_this, function () {
+        Laya.Tween.to(targeA, { x: pos.x }, 500, Laya.Ease.backInOut, null, null);
+    }), null);
+    // right_obj  
+    Laya.Tween.to(targetB, { x: targetB.x - office }, 500, Laya.Ease.backInOut, Laya.Handler.create(_this, function () {
+        Laya.Tween.to(targetB, { x: pos.x }, 500, Laya.Ease.backInOut, Laya.Handler.create(_this, function () {
+            callback();
+        }), null);
+    }), null);
+};
 // 窗口抖动
 var windowshack = function (shackx, shacky, time) {
     if (shackx === void 0) { shackx = 5; }
@@ -532,6 +577,10 @@ var windowshack = function (shackx, shacky, time) {
         Laya.stage.x = 0;
         Laya.stage.y = 0;
     }, time);
+};
+// 随机算法
+var getRandomInt = function (min, max) {
+    return Math.floor(Math.random() * (max - min) + min);
 };
 // 弹性缩放
 var scaleelastic = function (target, x, y, time) {

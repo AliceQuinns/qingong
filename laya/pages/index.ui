@@ -2,7 +2,7 @@
     "x":0,
     "type":"View",
     "selectedBox":1,
-    "selecteID":20,
+    "selecteID":59,
     "props":{"width":720,"sceneColor":"#ffffff","height":1280},
     "nodeParent":-1,
     "label":"View",
@@ -41,7 +41,7 @@
         {
             "x":15,
             "type":"Image",
-            "props":{"y":575,"x":233,"width":150,"var":"pool1","skin":"index/Leadbg.png","name":"pool1","height":120},
+            "props":{"y":575,"x":244,"width":120,"var":"pool1","skin":"index/Leadbg.png","name":"pool1","height":120},
             "nodeParent":1,
             "label":"Image(pool1)",
             "isDirectory":false,
@@ -54,7 +54,7 @@
         {
             "x":15,
             "type":"Image",
-            "props":{"y":575,"x":391,"width":150,"var":"pool2","skin":"index/Leadbg.png","name":"pool2","height":120},
+            "props":{"y":575,"x":402,"width":120,"var":"pool2","skin":"index/Leadbg.png","name":"pool2","height":120},
             "nodeParent":1,
             "label":"Image(pool2)",
             "isDirectory":false,
@@ -67,7 +67,7 @@
         {
             "x":15,
             "type":"Image",
-            "props":{"y":575,"x":548,"width":150,"var":"pool3","skin":"index/Leadbg.png","name":"pool3","height":120},
+            "props":{"y":575,"x":559,"width":120,"var":"pool3","skin":"index/Leadbg.png","name":"pool3","height":120},
             "nodeParent":1,
             "label":"Image(pool3)",
             "isDirectory":false,
@@ -80,7 +80,7 @@
         {
             "x":15,
             "type":"Image",
-            "props":{"y":710,"x":233,"width":150,"var":"pool4","skin":"index/Leadbg.png","name":"pool4","height":120},
+            "props":{"y":710,"x":244,"width":120,"var":"pool4","skin":"index/Leadbg.png","name":"pool4","height":120},
             "nodeParent":1,
             "label":"Image(pool4)",
             "isDirectory":false,
@@ -93,7 +93,7 @@
         {
             "x":15,
             "type":"Image",
-            "props":{"y":710,"x":391,"width":150,"var":"pool5","skin":"index/Leadbg.png","name":"pool5","height":120},
+            "props":{"y":710,"x":402,"width":120,"var":"pool5","skin":"index/Leadbg.png","name":"pool5","height":120},
             "nodeParent":1,
             "label":"Image(pool5)",
             "isDirectory":false,
@@ -106,7 +106,7 @@
         {
             "x":15,
             "type":"Image",
-            "props":{"y":710,"x":548,"width":150,"var":"pool6","skin":"index/Leadbg.png","name":"pool6","height":120},
+            "props":{"y":710,"x":559,"width":120,"var":"pool6","skin":"index/Leadbg.png","name":"pool6","height":120},
             "nodeParent":1,
             "label":"Image(pool6)",
             "isDirectory":false,
@@ -119,7 +119,7 @@
         {
             "x":15,
             "type":"Image",
-            "props":{"y":844,"x":233,"width":150,"var":"pool7","skin":"index/Leadbg.png","name":"pool7","height":120},
+            "props":{"y":844,"x":244,"width":120,"var":"pool7","skin":"index/Leadbg.png","name":"pool7","height":120},
             "nodeParent":1,
             "label":"Image(pool7)",
             "isDirectory":false,
@@ -132,7 +132,7 @@
         {
             "x":15,
             "type":"Image",
-            "props":{"y":844,"x":391,"width":150,"var":"pool8","skin":"index/Leadbg.png","name":"pool8","height":120},
+            "props":{"y":844,"x":402,"width":120,"var":"pool8","skin":"index/Leadbg.png","name":"pool8","height":120},
             "nodeParent":1,
             "label":"Image(pool8)",
             "isDirectory":false,
@@ -145,7 +145,7 @@
         {
             "x":15,
             "type":"Image",
-            "props":{"y":844,"x":548,"width":150,"var":"pool9","skin":"index/Leadbg.png","name":"pool9","height":120},
+            "props":{"y":844,"x":559,"width":120,"var":"pool9","skin":"index/Leadbg.png","name":"pool9","height":120},
             "nodeParent":1,
             "label":"Image(pool9)",
             "isDirectory":false,
@@ -158,7 +158,7 @@
         {
             "x":15,
             "type":"Image",
-            "props":{"y":979,"x":233,"width":150,"var":"pool10","skin":"index/Leadbg.png","name":"pool10","height":120},
+            "props":{"y":979,"x":244,"width":120,"var":"pool10","skin":"index/Leadbg.png","name":"pool10","height":120},
             "nodeParent":1,
             "label":"Image(pool10)",
             "isDirectory":false,
@@ -171,7 +171,7 @@
         {
             "x":15,
             "type":"Image",
-            "props":{"y":979,"x":391,"width":150,"var":"pool11","skin":"index/Leadbg.png","name":"pool11","height":120},
+            "props":{"y":979,"x":402,"width":120,"var":"pool11","skin":"index/Leadbg.png","name":"pool11","height":120},
             "nodeParent":1,
             "label":"Image(pool11)",
             "isDirectory":false,
@@ -184,7 +184,7 @@
         {
             "x":15,
             "type":"Image",
-            "props":{"y":979,"x":548,"width":150,"var":"pool12","skin":"index/Leadbg.png","name":"pool12","height":120},
+            "props":{"y":979,"x":559,"width":120,"var":"pool12","skin":"index/Leadbg.png","name":"pool12","height":120},
             "nodeParent":1,
             "label":"Image(pool12)",
             "isDirectory":false,
@@ -559,6 +559,32 @@
                     "child":[
                         ]
                 }]
+        },
+        {
+            "x":15,
+            "type":"Image",
+            "props":{"y":97,"x":636,"var":"help","skin":"index/help.png","name":"help"},
+            "nodeParent":1,
+            "label":"Image(help)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":58,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Image",
+            "props":{"y":179,"x":638,"var":"audioCtr","skin":"index/voice1.png","name":"audioCtr"},
+            "nodeParent":1,
+            "label":"Image(audioCtr)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":59,
+            "child":[
+                ]
         }],
     "animations":[
         {

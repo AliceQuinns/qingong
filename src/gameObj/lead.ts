@@ -40,8 +40,8 @@ module GAME {
             this.range = adminPool.Range;// 动画边界
 
             this.speed = {
-                x: this.cycle / 2 / 1000,
-                y: this.cycle / 2 / 10000
+                x: this.cycle / 5 / 1000,
+                y: this.cycle / 5 / 10000
             }
 
             this.init();
@@ -137,44 +137,55 @@ module GAME {
 
         // 升级
         private upgrade(datas) {
-            console.log("开始升级");
-            Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/composerole.php", {
-                openid: LeadInfo.openID,
-                role1: this.id,
-                role2: datas.id,
-                position: datas.pos,
-            }, data => {
+            
+            let targetobjs;
+            if (datas.AdminTimer) {
+                targetobjs = datas.icon.child;
+            } else {
+                targetobjs = datas.icon.parent;
+            }
+
+            this.icon.parent.y = targetobjs.y;
+
+            // 合体动画
+            upgradeAdmin(this.icon.parent, targetobjs, { x: targetobjs.x, y: targetobjs.y }, () => {
                 loveadmin(this.stage, 350, { x: datas.position.x + 50, y: datas.position.y + 50 });// 爱心动画
 
                 this.delete();
                 datas.delete();
 
-                
+                Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/composerole.php", {
+                    openid: LeadInfo.openID,
+                    role1: this.id,
+                    role2: datas.id,
+                    position: datas.pos,
+                }, data => {
+                    tips("升级成功");
+                    let user = {
+                        roleid: data.roleid,
+                        grade: data.grade,
+                        iswork: data.iswork,
+                        position: data.position,
+                        wages: data.wages,
+                        cycle: data.cycle,
+                    };
+                    let newLead = new GAME.lead(user, this.stage);
 
-                tips("升级成功");
-                let user = {
-                    roleid: data.roleid,
-                    grade: data.grade,
-                    iswork: data.iswork,
-                    position: data.position,
-                    wages: data.wages,
-                    cycle: data.cycle,
-                };
-                let newLead =  new GAME.lead(user, this.stage);
+                    // Laya.stage.event("Synthesis", newLead);// 发送合成事件
 
-                Laya.stage.event("Synthesis",newLead);// 发送合成事件
+                    if (!!data.role_level) Laya.stage.event("rolelevelSet", data.role_level);// 更新人物解锁等级
 
-                if (!!data.role_level) Laya.stage.event("rolelevelSet", data.role_level);// 更新人物解锁等级
+                    if (!!data.islock && data.islock === 2) {
+                        console.log("人物解锁列表更新");
+                        this.unlock(data.lockinfo, data.lockinfo.role_name);
+                    }
+                }, err => {
+                    tips("升级失败");
+                    Laya.Tween.to(this.icon.parent, { x: this.position.x, y: this.position.y }, 100);
+                })
 
-                if (!!data.islock && data.islock === 2) {
-                    console.log("人物解锁列表更新");
-                    this.unlock(data.lockinfo, data.lockinfo.role_name);
-                }
+            });
 
-            }, err => {
-                tips("升级失败");
-                Laya.Tween.to(this.icon.parent, { x: this.position.x, y: this.position.y }, 100);
-            })
         }
 
         // 更换位置
@@ -237,8 +248,9 @@ module GAME {
 
         // 开始工作
         private work() {
-            
-            window["_audio"]._Sound("appear");
+
+            // window["_audio"]._Sound("appear");
+            window["_audio"].random();
 
             Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/runrole.php", {
                 openid: LeadInfo.openID,
@@ -247,7 +259,7 @@ module GAME {
                 console.log("开始工作");
                 Laya.stage.event("adminpool", 1);
 
-                Laya.stage.event("workstart",this);
+                Laya.stage.event("workstart", this);
                 // adminPool.child += 1;
             }, err => {
                 console.log("工作请求失败");
@@ -270,7 +282,7 @@ module GAME {
 
                 this.Timer = window.setInterval(() => {
                     Laya.stage.event("MoneyAdd", this.wages * this.Multiple);
-                    tips(Format((this.wages * this.Multiple).toString()), "coin",this.icon.parent.x,this.icon.parent.y);
+                    tips(Format((this.wages * this.Multiple).toString()), "coin", this.icon.parent.x, this.icon.parent.y);
                 }, this.cycle);
 
                 Laya.stage.event("speedSet", { type: 1, value: Math.floor(this.wages / (this.cycle / 1000)).toString() });

@@ -511,6 +511,70 @@ let coinanimation = (target, time, pos, playback: number = 1) => {
     }, time);
 }
 
+// 移动动画
+let movePos = (target, targetPos, endPos, frequency) => {
+    Laya.Tween.clearAll(target);
+    // if(target["movestatus"])target["movestatus"] = false;
+
+    // target["movestatus"] = true;
+
+    // 记录次数
+    if (!target["frequency"]) target["frequency"] = 0;
+    if (target["frequency"] >= frequency) {
+        // target["movestatus"] = true;
+        target["frequency"] = 0;
+        return;
+    }
+    // 开始缓动
+    if (target["moveType"]) {
+        Laya.Tween.to(target,
+            { x: targetPos.x, y: targetPos.y },
+            1000, Laya.Ease.backInOut,
+            Laya.Handler.create(this, () => {
+                target["moveType"] = !target["moveType"];
+                target["frequency"] += 1;
+                movePos(target, targetPos, endPos, frequency);
+            }), null);
+        console.log("true");
+    } else {
+        Laya.Tween.to(target,
+            { x: endPos.x, y: endPos.y },
+            1000, Laya.Ease.backInOut,
+            Laya.Handler.create(this, () => {
+                target["moveType"] = !target["moveType"];
+                target["frequency"] += 1;
+                movePos(target, targetPos, endPos, frequency);
+            }), null);
+        console.log("false");
+    }
+}
+
+// 升级动画
+let upgradeAdmin = (targeA, targetB, pos, callback, office: number = 50) => {
+    // left_obj
+    Laya.Tween.to(targeA,
+        { x: targeA.x + office },
+        500, Laya.Ease.backInOut,
+        Laya.Handler.create(this, () => {
+            Laya.Tween.to(targeA,
+                { x: pos.x },
+                500, Laya.Ease.backInOut,
+                null, null);
+        }), null);
+    // right_obj  
+    Laya.Tween.to(targetB,
+        { x: targetB.x - office },
+        500, Laya.Ease.backInOut,
+        Laya.Handler.create(this, () => {
+            Laya.Tween.to(targetB,
+                { x: pos.x },
+                500, Laya.Ease.backInOut,
+                Laya.Handler.create(this, () => {
+                    callback();
+                }), null);
+        }), null);
+}
+
 // 窗口抖动
 let windowshack = (shackx: number = 5, shacky: number = 5, time: number = 500) => {
     let x = shackx, y = shacky;
@@ -528,6 +592,11 @@ let windowshack = (shackx: number = 5, shacky: number = 5, time: number = 500) =
     }, time)
 }
 
+// 随机算法
+let getRandomInt = (min, max) => {
+    return Math.floor(Math.random() * (max - min) + min);
+}
+
 // 弹性缩放
 let scaleelastic = (target, x: number = 1.2, y: number = 1.2, time: number = 150) => {
     Laya.Tween.to(target, { scaleX: x, scaleY: y }, time, Laya.Ease.bounceInOut, Laya.Handler.create(this, () => {
@@ -536,7 +605,7 @@ let scaleelastic = (target, x: number = 1.2, y: number = 1.2, time: number = 150
 }
 
 // 移动重复动画
-let repeatadimation = (target,office,time) => {
+let repeatadimation = (target, office, time) => {
     Laya.Tween.to(target, { x: office.x, y: office.y }, time, Laya.Ease.bounceInOut, Laya.Handler.create(this, () => {
         target.scale(1, 1);
     }));

@@ -2,7 +2,7 @@
     "x":0,
     "type":"Dialog",
     "selectedBox":3,
-    "selecteID":17,
+    "selecteID":15,
     "props":{"width":750,"sceneColor":"#ffffff","height":1280},
     "nodeParent":-1,
     "label":"Dialog",
@@ -79,7 +79,7 @@
                 {
                     "x":30,
                     "type":"Text",
-                    "props":{"y":577,"x":141,"wordWrap":true,"width":255,"var":"textcont","valign":"middle","text":"赏赐对方5个巴掌可获得500金币","overflow":"hidden","name":"textcont","height":159,"fontSize":30,"font":"Arial","color":"#e6ef0b","bold":true,"align":"center"},
+                    "props":{"y":577,"x":141,"wordWrap":true,"width":255,"var":"textcont","valign":"middle","text":"赏赐对方5个巴掌可获得500金币","overflow":"hidden","name":"textcont","height":159,"fontSize":30,"font":"Arial","color":"#ffffff","bold":true,"align":"center"},
                     "nodeParent":3,
                     "label":"Text(textcont)",
                     "isDirectory":false,

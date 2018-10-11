@@ -52,6 +52,7 @@ P 71D2F46E delect.png
 R EF47E83F duizhan_bg.png
 P A31C58B3 hand.png
 P 52E4689F hand2.png
+P 8953B38A help.png
 P 743616B9 hua.png
 P 702A3B5D huandi.png
 P 40B54ADD huangho.png
@@ -71,6 +72,7 @@ P 47869309 name_bg.png
 P 5E1A6916 rank.png
 P 1C32143D receive.png
 P B365FD7A receive2.png
+P A5E3695D receive3.png
 P 77538231 recovery.png
 R EDC35562 select.png
 P 6280253A share.png
@@ -81,11 +83,15 @@ P 0CD2810E taiho.png
 P 3C6EC0D9 taijian.png
 P 7B4197E6 textbg.png
 R 65A61F90 tips_bg.png
+R 14A8555D tipsbg1.png
+R C10466B8 tipsbg2.png
 P 6735E5AC today_line.png
 P 8AD08B6A unknownman.png
 P 75DA45D3 unlock_bg.png
 P 0CAE6F2E upgrade.png
 P 68A259A7 video.png
+P F984D3EB voice1.png
+P F9C779AC voice2.png
 P 11FDB9B7 weizhi1.png
 P 9F1E0F13 weizhi2.png
 P 111386C7 xuanyao.png

@@ -8,13 +8,15 @@ module GAME {
         private tips;
         private tipstext;
         private _zOrder = 103;
+        private parentself;// 父环境
 
-        constructor(traget) {
+        constructor(traget, self) {
             this.targetUI = traget;
+            this.parentself = self;
         }
 
+        // 初始化引导界面
         public open() {
-            // return;
             // 遮罩层
             this.mask = new Laya.Image("index/mask.png") as Laya.Image;
             this.mask.pos(-180, -180);
@@ -29,6 +31,8 @@ module GAME {
             this.hand.pos(442, 1191);
             this.hand.zOrder = 103;
             this.targetUI.addChild(this.hand);
+
+            window["aa"] = this.hand;
 
 
             // tips
@@ -57,10 +61,12 @@ module GAME {
             this.tipstext.overflow = "hidden";
             this.tipstext.valign = "middle";
 
+            // 停止事件冒泡
             this.mask.on(Laya.Event.CLICK, this, e => {
                 e.stopPropagation();
             })
 
+            // 购买
             this.purchase();
         }
 
@@ -69,28 +75,35 @@ module GAME {
             let a = this._zOrder;
 
             let target = this.targetUI.getChildByName("purchase") as Laya.Button;
+            let texta = this.targetUI.getChildByName("purchase_text") as Laya.Text;
             a = [target.zOrder, target.zOrder = a][0];
-
-            console.log(target.zOrder);
+            texta.zOrder = target.zOrder;
 
             this.tips.pos(target.x, target.y - target.height * 1.2);
 
-            this.hand.pos(target.x + target.width / 2 - this.hand.width / 2, target.y + target.height / 2);
+            this.hand.pos(target.x, target.y + target.height / 2);
+
+            movePos(this.hand, { x: this.hand.x, y: this.hand.y }, { x: this.hand.x + target.width - this.hand.width, y: this.hand.y }, 15);
 
             target.once(Laya.Event.CLICK, this, e => {
                 this.Synthesis();
                 a = [target.zOrder, target.zOrder = a][0];
-                console.log("购买");
             })
         }
 
         // 合成教程
         public Synthesis() {
             this.tipstext.text = "拖动升级";
+            let pool1, pool2;
 
-            // if(!this.targetUI.getChildByName("pool1")["leadClass"])return;
-            let pool1 = this.targetUI.getChildByName("pool1").leadClass.icon.parent;
-            let pool2 = this.targetUI.getChildByName("pool2").leadClass.icon.parent;
+            if (!this.targetUI.getChildByName("pool1")["leadClass"] || !this.targetUI.getChildByName("pool2")["leadClass"]) {
+                pool1 = this.targetUI.getChildByName("pool1");
+                pool2 = this.targetUI.getChildByName("pool2");
+            } else {
+                pool1 = this.targetUI.getChildByName("pool1").leadClass.icon.parent;
+                pool2 = this.targetUI.getChildByName("pool2").leadClass.icon.parent;
+            }
+
             let a = pool1._zOrder;
             pool1.zOrder = 120;
             pool2.zOrder = pool1.zOrder;
@@ -99,46 +112,79 @@ module GAME {
 
             this.hand.pos(pool1.x, pool1.y + pool1.height);
 
+            movePos(this.hand, { x: this.hand.x, y: this.hand.y }, { x: this.hand.x + 200, y: this.hand.y }, 15);
+
             pool1.once(Laya.Event.CLICK, this, e => {
                 this.work();
                 pool1.zOrder = a;
                 pool2.zOrder = pool1.zOrder;
-                console.log("合成");
             });
+
+            pool2.once(Laya.Event.CLICK, this, e => {
+                this.work();
+                pool1.zOrder = a;
+                pool2.zOrder = pool1.zOrder;
+            })
         }
 
         // 工作教程
         public work() {
-            Laya.stage.once("Synthesis", this, e => {
-                console.log("合成", e);
-                e.icon.parent.zOrder = this._zOrder;
+            this.mask.zOrder = -1;
 
-                // 动画池
-                let AnimationPool = this.targetUI.getChildByName("AnimationPool") as Laya.Image;
-                AnimationPool.zOrder = this._zOrder;
+            this.tips.pos(179, 200);
 
-                this.tipstext.text = "请拖动到此";
+            movePos(this.hand, { x: 200, y: 310 }, { x: this.hand.x, y: this.hand.y }, 15);
 
-                this.tips.pos(this.tips.x, this.tips.y - 200);
-                this.hand.pos(e.icon.parent.x, e.icon.parent.y + e.icon.parent.height);
+            this.tipstext.text = "拖动玩家到此";
 
-                Laya.stage.once("workstart", this, e => {
-                    AnimationPool.zOrder = 0;
-                    this.palace();
-                })
+            Laya.stage.once("adminpool", this, e => {
+                this.palace();
             })
         }
 
         // 冷宫教程
         public palace() {
+            this.mask.zOrder = 102;
+            this.tipstext.text = "进入攻击敌人";
+
             let target = this.targetUI.palace as Laya.Image;
             target.zOrder = this._zOrder;
 
-            this.tips.pos(target.x + target.width /2, target.y - target.height * 1.2);
+            this.tips.pos(target.x, target.y - target.height * 1.2);
             this.hand.pos(target.x, target.y + target.height * 1.2);
+
+            movePos(this.hand, { x: this.hand.x, y: this.hand.y }, { x: this.hand.x + target.width, y: this.hand.y }, 15);
 
             target.once(Laya.Event.CLICK, this, e => {
                 target.zOrder = 0;
+
+                window.setTimeout(() => {
+
+                    Laya.Tween.clearAll(this.hand);
+
+                    this.tips.pos(Laya.stage.width * 0.2, Laya.stage.height * 0.1);
+                    this.hand.pos(Laya.stage.width * 0.3, Laya.stage.height * 0.3);
+                    
+
+                    Laya.stage.removeChild(this.hand);
+                    Laya.stage.removeChild(this.tips);
+
+                    Laya.stage.addChild(this.tips);
+                    Laya.stage.addChild(this.hand);
+
+                    this.tipstext.text = "开始攻击敌人";
+
+                    window.setTimeout(() => {
+                        Laya.stage.once(Laya.Event.CLICK, this, e => {
+                            this.tips.destroy();
+                            this.hand.destroy();
+                            this.mask.destroy();
+
+                            tips("您已经完成新手教学");
+                        });
+                    }, 0);
+
+                }, 500);
             });
         }
 

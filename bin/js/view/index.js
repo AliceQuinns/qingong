@@ -3,6 +3,7 @@ var GAME;
     var index = /** @class */ (function () {
         // https://shop.yunfanshidai.com/xcxht/qinggong/
         function index() {
+            this.Audioctr = true; // 默认音效
             //  玩家数据
             this.GameInfo = {
                 userid: "0",
@@ -66,7 +67,7 @@ var GAME;
                         // 收益弹框
                         var alertUI_1 = init_alert(ui.alertUI, function () {
                             var text = alertUI_1.getChildByName("content").getChildByName("contentText");
-                            text.text = (!!data.offline) ? data.offline + "\u4E2A\u91D1\u5E01" : "0个金币";
+                            text.text = (!!data.offline) ? Format(data.offline) + "\u4E2A\u91D1\u5E01" : "0个金币";
                         }, function () {
                             // 签到
                             (!!data["issign"] && data["issign"] === "1") ? _this.Signin(data["signdays"]) : console.log("已签到");
@@ -92,7 +93,7 @@ var GAME;
                     _this.turntable = new GAME.turntable(); // 转盘模块
                     _this.shop = new GAME.shop(LeadInfo.locklist); // 商店模块
                     _this.palace = new GAME.palace(); // 冷宫模块
-                    _this.course = new GAME.Course(_this.indexUI); // 新手引导
+                    _this.course = new GAME.Course(_this.indexUI, _this); // 新手引导
                     _this.event(); // 事件监听
                     _this.updateshopBtn(); // 更新购买按钮价格
                     window["_audio"].onBGM();
@@ -104,8 +105,12 @@ var GAME;
                     window.setInterval(function () {
                         Laya.stage.event("volumAdd", 1);
                     }, 1800000);
+                    // 随机背景音效
+                    window.setInterval(function () {
+                        window["_audio"].random();
+                    }, 50000);
                     // 新手指引
-                    // (!!data.isnew && data.isnew.toString() === '1') ? this.course.open() : console.log("非新用户");
+                    (!!data.isnew && data.isnew.toString() === '1') ? _this.course.open() : console.log("非新用户");
                 }
             }, function (err) {
                 console.log(err, "无法请求数据");
@@ -212,6 +217,24 @@ var GAME;
             // 购买人物
             addClick(this.indexUI.purchase, function () {
                 _this.leadshop();
+            });
+            // 帮助
+            addClick(this.indexUI.help, function () {
+                init_alert(ui.helpUI);
+            });
+            // 音效
+            addClick(this.indexUI.audioCtr, function () {
+                _this.Audioctr = !_this.Audioctr;
+                if (_this.Audioctr) {
+                    // 开启
+                    window["_audio"].control("open");
+                    _this.indexUI.audioCtr.skin = "index/voice1.png";
+                }
+                else {
+                    // 关闭
+                    window["_audio"].control("close");
+                    _this.indexUI.audioCtr.skin = "index/voice2.png";
+                }
             });
             // 回收按钮
             addClick(this.indexUI.recovery, function () {
