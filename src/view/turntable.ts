@@ -13,8 +13,11 @@ module GAME {
         }
 
         public open(data) {
+
             this.GameInfo = data.volum;
             this.radices = data.speed;
+
+            if (Number(window["GameInfo"].volum) <= 0) tips("您的抽奖券不足");
 
             this.targetUI = init_alert(ui.LuckdrawUI);
             this.btn = this.targetUI.getChildByName("content").getChildByName("_btn") as Laya.Button;// 按钮
@@ -33,7 +36,7 @@ module GAME {
         private event() {
             this.updatevoluce();
 
-            if (this.GameInfo <= 0) {
+            if (Number(window["GameInfo"].volum) <= 0) {
                 tips("抽奖券不足够");
                 return;
             }
@@ -43,7 +46,7 @@ module GAME {
                 radices: this.radices
             }, data => {
                 console.log(data);
-                if(!data){
+                if (!data) { 
                     tips("抽奖过于频繁 请稍后重试");
                     return;
                 };
@@ -56,6 +59,11 @@ module GAME {
 
                 // 按钮事件
                 this.btn.once(Laya.Event.CLICK, this, e => {
+                    if (Number(window["GameInfo"].volum) <= 0) {
+                        tips("抽奖券不足够");
+                        return;
+                    }
+                    
                     this.admin(this.turntable, (8 - Result) * 45,
                         Laya.Handler.create(this, () => {
                             // 奖励特效界面
@@ -92,7 +100,7 @@ module GAME {
         private PropUI(type: number, title: string, callback: any = null) {
             let self = this;
 
-            if(!!this.propui)return;
+            if (!!this.propui) return;
 
             let targetUI = init_alert(ui.rewardUI, null, () => {
                 window.clearInterval(time);
@@ -135,8 +143,8 @@ module GAME {
                     coin.visible = true;
                     coin.pos(-76, -245);
                     Textarea.visible = false;
-                    reward.text = `恭喜您获得金币${Format((self.radices * 2).toString())}个`;
-                    Laya.stage.event("MoneyAdd", self.radices * 2);
+                    reward.text = `恭喜您获得金币${Format(accMul(self.radices, 3600).toString())}个`;
+                    Laya.stage.event("MoneyAdd", accMul(self.radices, 3600));
                     break;
                 case 2:
                     // 太监
@@ -145,7 +153,8 @@ module GAME {
                     target.visible = true;
                     img.visible = true;
                     scaleAdmin(target);
-                    reward.text = `您赏赐太监总管${Format((self.radices).toString())}个金币`;
+                    reward.text = `您赏赐太监总管${Format(accMul(self.radices, 3600).toString())}个金币`;
+                    Laya.stage.event("MoneyReduce", accMul(self.radices, 3600));
                     // 处理字体
                     fontAdmin(title.slice(0, 15), 0, Textarea.width * 0.65, 50, 40, Textarea);// 右边文字
                     fontAdmin(title.slice(15, title.length), 0, Textarea.width * 0.15, 50, 40, Textarea);// 左边文字
@@ -157,8 +166,8 @@ module GAME {
                     coin.visible = true;
                     coin.pos(-76, -245);
                     Textarea.visible = false;
-                    reward.text = `恭喜您获得金币${Format((self.radices * 3).toString())}个`;
-                    Laya.stage.event("MoneyAdd", self.radices * 3);
+                    reward.text = `恭喜您获得金币${Format(accMul(self.radices, 5400).toString())}个`;
+                    Laya.stage.event("MoneyAdd", accMul(self.radices, 5400));
                     break;
                 case 4:
                     // 皇后
@@ -204,8 +213,8 @@ module GAME {
                     coin.visible = true;
                     coin.pos(-76, -245);
                     Textarea.visible = false;
-                    reward.text = `恭喜您获得金币${Format((self.radices).toString())}个`;
-                    Laya.stage.event("MoneyAdd", self.radices);
+                    reward.text = `恭喜您获得金币${Format(accMul(self.radices, 1800).toString())}个`;
+                    Laya.stage.event("MoneyAdd", accMul(self.radices, 1800));
                     break;
                 default:
                     console.log("道具界面 类型错误");
@@ -217,6 +226,7 @@ module GAME {
         private updatevoluce() {
             let text = this.targetUI.getChildByName("content").getChildByName("Lottery") as Laya.Text;
             text.text = window["GameInfo"].volum;
+            Laya.stage.event("updateCoin");
         }
     }
 }

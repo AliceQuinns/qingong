@@ -1,12 +1,24 @@
 var WebGL = Laya.WebGL;
+var Browser = Laya.Browser;
 // 程序入口
 var GameMain = /** @class */ (function () {
     function GameMain() {
         Laya.MiniAdpter.init();
+        // // 异形屏适配
+        // let onIPhoneX;
+        // if (Browser.onIPhone && Math.abs(Browser.pixelRatio - 3) < 0.01) {
+        //     onIPhoneX = (Browser.clientWidth == 375 && Browser.clientHeight == 812) || (Browser.clientWidth == 812 && Browser.clientHeight == 375);
+        // }
+        // if (onIPhoneX) {
+        //     console.log("iphonex");
+        //     //初始化引擎
+        //     Laya.init(Browser.clientWidth * Browser.pixelRatio, Browser.clientHeight * Browser.pixelRatio, WebGL);
+        // } else {
+        // }
         Laya.init(720, 1280, WebGL);
         Laya.stage.alignV = "middle";
         Laya.stage.alignH = "center";
-        Laya.stage.scaleMode = "exactfit";
+        Laya.stage.scaleMode = "fixedwidth";
         Laya.stage.screenMode = "none";
         //开启统计信息
         // Laya.Stat.show();

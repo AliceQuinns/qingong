@@ -14,6 +14,7 @@ module GAME {
                 audios2: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/audios2.mp3",
                 audios3: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/audios3.mp3",
                 audios4: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/audios4.mp3",
+                jiao: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/jiao.mp3"
             }
             this.audiopool = {};// 音频池
             this.status = true;// 全局音频控制

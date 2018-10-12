@@ -61,6 +61,7 @@ var GAME;
                 else if (data['status'] === "success") {
                     _this.customEvent(); // 自定义事件
                     _this.staticObj(); // 静态化常用变量
+                    _this.Floaticon(); // 引导收藏图标
                     console.log(data);
                     // 非新用户显示离线收益与签到
                     if (data.isnew.toString() === "2") {
@@ -116,6 +117,31 @@ var GAME;
                 console.log(err, "无法请求数据");
                 tips("获取不到您的信息");
             });
+        };
+        // 浮动收藏图标
+        index.prototype.Floaticon = function () {
+            var _this = this;
+            var icon = new Laya.Image("index/bag.png");
+            this.indexUI.addChild(icon);
+            icon.pos(this.indexUI.help.x - 50, this.indexUI.help.y + 20);
+            icon.anchorX = 0.5;
+            icon.anchorY = 0.5;
+            rotationPos(icon, 20, -20, 100, function () {
+                icon.destroy();
+                window.setTimeout(function () {
+                    _this.Floaticon();
+                }, 100000);
+            });
+            icon.on(Laya.Event.CLICK, this, function () {
+                init_alert(ui.shareUI, null, function () {
+                    window.setTimeout(function () {
+                        _this.Floaticon();
+                    }, 100000);
+                });
+                Laya.Tween.clearAll(icon);
+                icon.destroy();
+            });
+            // window["asdv"] = icon;
         };
         // 签到
         index.prototype.Signin = function (day) {
@@ -228,6 +254,7 @@ var GAME;
                 if (_this.Audioctr) {
                     // 开启
                     window["_audio"].control("open");
+                    window["_audio"].onBGM();
                     _this.indexUI.audioCtr.skin = "index/voice1.png";
                 }
                 else {
@@ -297,6 +324,8 @@ var GAME;
             // 添加抽奖券
             Laya.stage.on("volumAdd", this, function (e) {
                 _this.GameInfo.volum += Number(e);
+                if (_this.GameInfo.volum <= 0)
+                    _this.GameInfo.volum = 0;
                 if (_this.GameInfo.volum >= 50)
                     _this.GameInfo.volum = 50;
             });
@@ -330,8 +359,11 @@ var GAME;
             });
             // 更新玩家解锁等级
             Laya.stage.on("rolelevelSet", this, function (e) {
-                if (!!e)
+                if (!!e) {
                     _this.GameInfo.role_level = e;
+                    _this.GameInfo.grade = e + 4;
+                }
+                ;
                 console.log("更新人物解锁等级为", e);
             });
             // 更新服务器数据信息

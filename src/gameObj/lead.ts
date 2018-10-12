@@ -376,6 +376,9 @@ module GAME {
         // 结束工作按钮的事件
         private endWork() {
             this.icon.child.once(Laya.Event.CLICK, this, e => {
+                Laya.Tween.to(this.icon.parent, { x: this.position.x, y: this.position.y }, 50);
+
+                window["_audio"].random();
                 Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/stoprole.php", {
                     openid: LeadInfo.openID,
                     roleid: this.id,
@@ -385,7 +388,6 @@ module GAME {
                     this.icon.child.alpha = 0;
                     this.cointimer("stop");// 停止工作
 
-                    Laya.Tween.to(this.icon.parent, { x: this.position.x, y: this.position.y }, 100);
                     window.setTimeout(() => {
                         this.icon.parent.touchState = true;// 开启拖动
                         Laya.stage.event("adminpool", -1);
@@ -394,7 +396,7 @@ module GAME {
 
                 }, err => {
                     console.log("无法停止工作");
-                    Laya.Tween.to(this.icon.parent, { x: this.position.x, y: this.position.y }, 100);
+                    Laya.Tween.to(this.icon.parent, { x: this.position.x, y: this.position.y }, 50);
                 })
             })
         }

@@ -67,7 +67,7 @@
                 {
                     "x":30,
                     "type":"Image",
-                    "props":{"y":-232,"x":-32,"var":"proptype","skin":"index/jiangquan.png","name":"proptype"},
+                    "props":{"y":-206,"x":3,"var":"proptype","skin":"index/jiangquan.png","scaleY":2,"scaleX":2,"name":"proptype","anchorY":0.5,"anchorX":0.5},
                     "nodeParent":3,
                     "label":"Image(proptype)",
                     "isDirectory":false,

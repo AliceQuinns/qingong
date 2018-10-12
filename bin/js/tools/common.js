@@ -94,6 +94,7 @@ var drag = function (element, callback) {
     };
     // 拖动前
     element.on(Laya.Event.MOUSE_DOWN, _this, function (e) {
+        window["_audio"].random();
         // 更新位置
         position.x = element.x;
         position.y = element.y;
@@ -138,7 +139,7 @@ var drag = function (element, callback) {
             }
             if (!isCollision) {
                 console.log("未发生任何碰撞 自动返回初始位置");
-                Laya.Tween.to(element, { x: position.x, y: position.y }, 100);
+                Laya.Tween.to(element, { x: position.x, y: position.y }, 50);
             }
         }
         else {
@@ -372,6 +373,22 @@ var ContrastNumber = function (a, b) {
         return true;
     return Boolean(aMaxb);
 };
+// 数值乘法
+var accMuls = function (a, b) {
+    var arra = a.split('').reverse(), arrb = b.split('').reverse(), lena = arra.length, lenb = arrb.length, result = Array(lena + lenb + 1).join('0').split('');
+    arra.map(function (itema, indexa) {
+        arrb.map(function (itemb, indexb) {
+            result[indexa + indexb] = +result[indexa + indexb] + itema * itemb;
+        });
+    });
+    result.map(function (item, index) {
+        if (item >= 10) {
+            result[index + 1] = ~~result[index + 1] + ~~(result[index] / 10);
+            result[index] %= 10;
+        }
+    });
+    return result.reverse().join('').replace(/^0+/, '');
+};
 // 超大数值乘法
 var accMul = function (arg1, arg2) {
     var m = 0, s1 = arg1.toString(), s2 = arg2.toString();
@@ -383,8 +400,50 @@ var accMul = function (arg1, arg2) {
         m += s2.split(".")[1].length;
     }
     catch (e) { }
-    return Number(s1.replace(".", "")) * Number(s2.replace(".", "")) / Math.pow(10, m);
+    var targe = accMuls(Number(s1.replace(".", "")).toString(), Number(s2.replace(".", "")).toString());
+    return accDiv(targe, Math.pow(10, m)).toString();
 };
+// 超大数值除法运算
+function accDiv(arg1, arg2) {
+    var t1 = 0, t2 = 0, t3 = 0, r1, r2;
+    try {
+        t1 = arg1.toString().split(".")[1].length;
+    }
+    catch (e) { }
+    try {
+        t2 = arg2.toString().split(".")[1].length;
+    }
+    catch (e) { }
+    r1 = Number(arg1.toString().replace(".", ""));
+    r2 = Number(arg2.toString().replace(".", ""));
+    if (r2 == 0)
+        return 0;
+    var result = String(r1 / r2);
+    try {
+        t3 = result.toString().split(".")[1].length;
+    }
+    catch (e) { }
+    var index = t2 - t1 - t3;
+    if (index < 0) {
+        result = result.replace(".", "");
+        while (result.length <= Math.abs(index)) {
+            result = '0' + result;
+        }
+        var start = result.substring(0, result.length + index);
+        var end = result.substring(result.length + index, result.length);
+        result = start + '.' + end;
+        return Number(result);
+    }
+    else if (index > 0) {
+        result = result.replace(".", "");
+        while (result.length <= Math.abs(index)) {
+            result += '0';
+        }
+        return Number(result);
+    }
+    else
+        return Number(result.replace(".", ""));
+}
 // 数值格式化
 var Format = function (value) {
     var a = value;
@@ -483,7 +542,7 @@ var loveadmin = function (target, time, pos, playback) {
     skeleton.playbackRate(playback);
     target.addChild(skeleton);
     skeleton.pos(pos.x, pos.y);
-    skeleton.load("https://shop.yunfanshidai.com/xcxht/qinggong/res/animation/aixng/love.sk");
+    skeleton.load("https://shop.yunfanshidai.com/xcxht/qinggong/res/adminion/aixng/love.sk");
     window.setTimeout(function () {
         skeleton.destroy();
     }, time);
@@ -535,7 +594,7 @@ var movePos = function (target, targetPos, endPos, frequency) {
             target["frequency"] += 1;
             movePos(target, targetPos, endPos, frequency);
         }), null);
-        console.log("true");
+        // console.log("true");
     }
     else {
         Laya.Tween.to(target, { x: endPos.x, y: endPos.y }, 1000, Laya.Ease.backInOut, Laya.Handler.create(_this, function () {
@@ -543,22 +602,52 @@ var movePos = function (target, targetPos, endPos, frequency) {
             target["frequency"] += 1;
             movePos(target, targetPos, endPos, frequency);
         }), null);
-        console.log("false");
+        // console.log("false");
     }
 };
 // 升级动画
 var upgradeAdmin = function (targeA, targetB, pos, callback, office) {
     if (office === void 0) { office = 50; }
     // left_obj
-    Laya.Tween.to(targeA, { x: targeA.x + office }, 500, Laya.Ease.backInOut, Laya.Handler.create(_this, function () {
-        Laya.Tween.to(targeA, { x: pos.x }, 500, Laya.Ease.backInOut, null, null);
+    Laya.Tween.to(targeA, { x: targeA.x + office }, 200, Laya.Ease.circOut, Laya.Handler.create(_this, function () {
+        Laya.Tween.to(targeA, { x: pos.x }, 200, Laya.Ease.circOut, null, null);
     }), null);
     // right_obj  
-    Laya.Tween.to(targetB, { x: targetB.x - office }, 500, Laya.Ease.backInOut, Laya.Handler.create(_this, function () {
-        Laya.Tween.to(targetB, { x: pos.x }, 500, Laya.Ease.backInOut, Laya.Handler.create(_this, function () {
+    Laya.Tween.to(targetB, { x: targetB.x - office }, 200, Laya.Ease.circOut, Laya.Handler.create(_this, function () {
+        Laya.Tween.to(targetB, { x: pos.x }, 200, Laya.Ease.circOut, Laya.Handler.create(_this, function () {
             callback();
         }), null);
     }), null);
+};
+// 重复旋转动画
+var rotationPos = function (target, targetPos, endPos, frequency, callback) {
+    // console.log(callback);
+    Laya.Tween.clearAll(target);
+    // 记录次数
+    if (!target["frequency"])
+        target["frequency"] = 0;
+    if (target["frequency"] >= frequency) {
+        // console.log("结束",callback);
+        if (!!callback)
+            callback();
+        target["frequency"] = 0;
+        return;
+    }
+    // 开始缓动
+    if (target["moveType"]) {
+        Laya.Tween.to(target, { rotation: targetPos }, 300, Laya.Ease.sineIn, Laya.Handler.create(_this, function () {
+            target["moveType"] = !target["moveType"];
+            target["frequency"] += 1;
+            rotationPos(target, targetPos, endPos, frequency, callback);
+        }), null);
+    }
+    else {
+        Laya.Tween.to(target, { rotation: endPos }, 300, Laya.Ease.sineIn, Laya.Handler.create(_this, function () {
+            target["moveType"] = !target["moveType"];
+            target["frequency"] += 1;
+            rotationPos(target, targetPos, endPos, frequency, callback);
+        }), null);
+    }
 };
 // 窗口抖动
 var windowshack = function (shackx, shacky, time) {

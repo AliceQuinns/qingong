@@ -8,6 +8,7 @@ var GAME;
         shop.prototype.open = function () {
             var _this = this;
             var data = this.list; // 人物数据
+            // console.log(data);
             var lockListUI = init_alert(ui.lockListUI);
             var target = lockListUI._list; // 列表节点
             target.vScrollBarSkin = '';
@@ -18,12 +19,13 @@ var GAME;
                 if (index > data.length)
                     return;
                 var userData = data[index]; // 单项数据
-                var price = cell.getChildByName('btn_coin').getChildByName("btn_coin_text"); // 价格
-                price.text = Format(userData.price);
                 var LeadName = cell.getChildByName("LeadName"); // 姓名
                 LeadName.text = userData.name;
+                LeadName.visible = true;
                 if (userData.type === 1) {
                     // 已解锁
+                    var price_1 = cell.getChildByName('btn_coin').getChildByName("btn_coin_text"); // 价格
+                    price_1.text = Format(userData.price);
                     var Invisible = cell.getChildByName("Invisible"); // 关闭未解锁图标
                     Invisible.visible = false;
                     var grade = cell.getChildByName("grade"); // 等级
@@ -46,13 +48,15 @@ var GAME;
                     priceBtn.disabled = false;
                     addClick(priceBtn, function () {
                         _this.purchase(userData.grade, userData.price, function (data) {
-                            price.text = Format(data.price); // 更新购买后的价格
+                            price_1.text = Format(data.price); // 更新购买后的价格
                         });
                         console.log(userData.grade);
                     }, _this, true);
                 }
-                else if (userData.type === 2) {
+                else if (userData.type === 2 && Number(userData.grade) > Number(window["GameInfo"].grade)) {
                     // 未解锁
+                    var price = cell.getChildByName('btn_coin').getChildByName("btn_coin_text"); // 价格
+                    price.text = "未解锁";
                     var Invisible = cell.getChildByName("Invisible"); // 未解锁图标
                     Invisible.visible = true;
                     var lead_2 = cell.getChildByName("lead"); // 主角
@@ -61,6 +65,23 @@ var GAME;
                     grade.visible = false;
                     var grade_bg = cell.getChildByName("grade_bg"); // 等级背景
                     grade_bg.visible = false;
+                    var priceBtn = cell.getChildByName('btn_coin'); // 购买按钮
+                    priceBtn.disabled = true;
+                    LeadName.visible = false;
+                }
+                else {
+                    var price = cell.getChildByName('btn_coin').getChildByName("btn_coin_text"); // 价格
+                    price.text = "未解锁";
+                    var Invisible = cell.getChildByName("Invisible"); // 开启未解锁图标
+                    Invisible.visible = false;
+                    var grade = cell.getChildByName("grade"); // 等级
+                    grade.visible = true;
+                    grade.text = userData.grade;
+                    var grade_bg = cell.getChildByName("grade_bg"); // 等级背景
+                    grade_bg.visible = true;
+                    var lead_3 = cell.getChildByName("lead"); // 主角
+                    lead_3.skin = "Lead/" + userData.grade + ".png";
+                    lead_3.visible = true;
                     var priceBtn = cell.getChildByName('btn_coin'); // 购买按钮
                     priceBtn.disabled = true;
                 }

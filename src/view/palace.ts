@@ -87,7 +87,7 @@ module GAME {
             shock(1);
 
             // 攻击动画
-            attackadmin(pos, 100, { x: pos.x - pos.width / 2, y: pos.y - pos.height / 2 }, 0.01, this.bazdir);
+            attackadmin(pos, 100, { x: pos.x - pos.width / 2, y: pos.y }, 0.01, this.bazdir);
             this.bazdir = !this.bazdir;
 
             // 窗口抖动
@@ -104,6 +104,8 @@ module GAME {
 
             // 巴掌音效
             window["_audio"]._Sound("slap");
+            
+            window["_audio"]._Sound("jiao");
         }
 
     }

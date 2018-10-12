@@ -308,6 +308,8 @@ var GAME;
         lead.prototype.endWork = function () {
             var _this = this;
             this.icon.child.once(Laya.Event.CLICK, this, function (e) {
+                Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 50);
+                window["_audio"].random();
                 Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/stoprole.php", {
                     openid: LeadInfo.openID,
                     roleid: _this.id,
@@ -316,7 +318,6 @@ var GAME;
                     _this.AdminTimer = false; // 停止动画
                     _this.icon.child.alpha = 0;
                     _this.cointimer("stop"); // 停止工作
-                    Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 100);
                     window.setTimeout(function () {
                         _this.icon.parent.touchState = true; // 开启拖动
                         Laya.stage.event("adminpool", -1);
@@ -324,7 +325,7 @@ var GAME;
                     }, 500);
                 }, function (err) {
                     console.log("无法停止工作");
-                    Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 100);
+                    Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 50);
                 });
             });
         };

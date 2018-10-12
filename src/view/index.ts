@@ -89,6 +89,7 @@ module GAME {
 
                     this.customEvent();// 自定义事件
                     this.staticObj();// 静态化常用变量
+                    this.Floaticon();// 引导收藏图标
 
                     console.log(data);
 
@@ -132,7 +133,7 @@ module GAME {
                     this.turntable = new GAME.turntable();// 转盘模块
                     this.shop = new GAME.shop(LeadInfo.locklist);// 商店模块
                     this.palace = new GAME.palace();// 冷宫模块
-                    this.course = new GAME.Course(this.indexUI,this);// 新手引导
+                    this.course = new GAME.Course(this.indexUI, this);// 新手引导
 
                     this.event();// 事件监听
 
@@ -151,9 +152,9 @@ module GAME {
                     }, 1800000);
 
                     // 随机背景音效
-                    window.setInterval(()=>{
+                    window.setInterval(() => {
                         window["_audio"].random();
-                    },50000);
+                    }, 50000);
 
                     // 新手指引
                     (!!data.isnew && data.isnew.toString() === '1') ? this.course.open() : console.log("非新用户");
@@ -163,6 +164,34 @@ module GAME {
                 tips("获取不到您的信息");
             })
 
+        }
+
+        // 浮动收藏图标
+        private Floaticon(): void {
+            let icon = new Laya.Image("index/bag.png");
+            this.indexUI.addChild(icon);
+            icon.pos(this.indexUI.help.x - 50, this.indexUI.help.y + 20);
+            icon.anchorX = 0.5;
+            icon.anchorY = 0.5;
+
+            rotationPos(icon, 20, -20, 100, () => {
+                icon.destroy();
+                window.setTimeout(() => {
+                    this.Floaticon();
+                }, 100000);
+            });
+
+            icon.on(Laya.Event.CLICK, this, () => {
+                init_alert(ui.shareUI, null, () => {
+                    window.setTimeout(() => {
+                        this.Floaticon();
+                    }, 100000);
+                });
+                Laya.Tween.clearAll(icon);
+                icon.destroy();
+            });
+
+            // window["asdv"] = icon;
         }
 
         // 签到
@@ -278,18 +307,19 @@ module GAME {
             })
 
             // 帮助
-            addClick(this.indexUI.help,()=>{
+            addClick(this.indexUI.help, () => {
                 init_alert(ui.helpUI);
             })
 
             // 音效
-            addClick(this.indexUI.audioCtr,()=>{
+            addClick(this.indexUI.audioCtr, () => {
                 this.Audioctr = !this.Audioctr;
-                if(this.Audioctr){
+                if (this.Audioctr) {
                     // 开启
                     window["_audio"].control("open");
+                    window["_audio"].onBGM();
                     this.indexUI.audioCtr.skin = "index/voice1.png";
-                }else{
+                } else {
                     // 关闭
                     window["_audio"].control("close");
                     this.indexUI.audioCtr.skin = "index/voice2.png";
@@ -366,6 +396,7 @@ module GAME {
             // 添加抽奖券
             Laya.stage.on("volumAdd", this, e => {
                 this.GameInfo.volum += Number(e);
+                if(this.GameInfo.volum <=0)this.GameInfo.volum = 0;
                 if (this.GameInfo.volum >= 50) this.GameInfo.volum = 50;
             })
 
@@ -396,7 +427,10 @@ module GAME {
 
             // 更新玩家解锁等级
             Laya.stage.on("rolelevelSet", this, e => {
-                if (!!e) this.GameInfo.role_level = e;
+                if (!!e) {
+                    this.GameInfo.role_level = e;
+                    this.GameInfo.grade = e + 4;
+                };
                 console.log("更新人物解锁等级为", e);
             })
 

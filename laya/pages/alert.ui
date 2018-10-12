@@ -2,7 +2,7 @@
     "x":0,
     "type":"Dialog",
     "selectedBox":3,
-    "selecteID":11,
+    "selecteID":10,
     "props":{"width":750,"sceneColor":"#ffffff","height":1280},
     "nodeParent":-1,
     "label":"Dialog",
@@ -53,7 +53,7 @@
                 {
                     "x":30,
                     "type":"Image",
-                    "props":{"y":201,"x":229,"width":105,"var":"icon","skin":"index/copper2.png","name":"icon","height":105},
+                    "props":{"y":200,"x":190,"var":"icon","skin":"index/money.png","name":"icon"},
                     "nodeParent":3,
                     "label":"Image(icon)",
                     "isDirectory":false,

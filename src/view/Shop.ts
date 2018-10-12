@@ -7,6 +7,7 @@ module GAME {
         }
         private open() {
             let data = this.list;// 人物数据
+            // console.log(data);
             let lockListUI = init_alert(ui.lockListUI);
             let target = lockListUI._list;// 列表节点
 
@@ -19,14 +20,15 @@ module GAME {
                 if (index > data.length) return;
                 let userData = data[index]; // 单项数据
 
-                let price = cell.getChildByName('btn_coin').getChildByName("btn_coin_text") as Laya.Text;// 价格
-                price.text = Format(userData.price);
-
                 let LeadName = cell.getChildByName("LeadName") as Laya.Text;// 姓名
                 LeadName.text = userData.name;
+                LeadName.visible = true;
 
                 if (userData.type === 1) {
                     // 已解锁
+
+                    let price = cell.getChildByName('btn_coin').getChildByName("btn_coin_text") as Laya.Text;// 价格
+                    price.text = Format(userData.price);
 
                     let Invisible = cell.getChildByName("Invisible") as Laya.Image;// 关闭未解锁图标
                     Invisible.visible = false;
@@ -60,8 +62,10 @@ module GAME {
                         console.log(userData.grade);
                     }, this, true);
 
-                } else if (userData.type === 2) {
+                } else if (userData.type === 2 && Number(userData.grade) > Number(window["GameInfo"].grade)) {
                     // 未解锁
+                    let price = cell.getChildByName('btn_coin').getChildByName("btn_coin_text") as Laya.Text;// 价格
+                    price.text = "未解锁";
 
                     let Invisible = cell.getChildByName("Invisible") as Laya.Image;// 未解锁图标
                     Invisible.visible = true;
@@ -74,6 +78,29 @@ module GAME {
 
                     let grade_bg = cell.getChildByName("grade_bg") as Laya.Image; // 等级背景
                     grade_bg.visible = false;
+
+                    let priceBtn = cell.getChildByName('btn_coin') as Laya.Button;// 购买按钮
+                    priceBtn.disabled = true;
+
+                    LeadName.visible = false;
+                } else {
+
+                    let price = cell.getChildByName('btn_coin').getChildByName("btn_coin_text") as Laya.Text;// 价格
+                    price.text = "未解锁";
+
+                    let Invisible = cell.getChildByName("Invisible") as Laya.Image;// 开启未解锁图标
+                    Invisible.visible = false;
+
+                    let grade = cell.getChildByName("grade") as Laya.Text; // 等级
+                    grade.visible = true;
+                    grade.text = userData.grade;
+
+                    let grade_bg = cell.getChildByName("grade_bg") as Laya.Image; // 等级背景
+                    grade_bg.visible = true;
+
+                    let lead = cell.getChildByName("lead") as Laya.Image; // 主角
+                    lead.skin = `Lead/${userData.grade}.png`;
+                    lead.visible = true;
 
                     let priceBtn = cell.getChildByName('btn_coin') as Laya.Button;// 购买按钮
                     priceBtn.disabled = true;
@@ -90,14 +117,14 @@ module GAME {
                 tips("后宫已满");
                 return;
             }
-            
-            if (window['GameInfo'].coin === "0" || !ContrastNumber(window['GameInfo'].coin,price)) {
+
+            if (window['GameInfo'].coin === "0" || !ContrastNumber(window['GameInfo'].coin, price)) {
                 tips("金币不足");
                 return;
             }
 
             window["_audio"]._Sound("buy");// 购买音效
-            
+
             Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/buyrole.php", {
                 openid: LeadInfo.openID,
                 grade: grade, // 购买等级

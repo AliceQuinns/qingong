@@ -2,7 +2,7 @@
     "x":0,
     "type":"Dialog",
     "selectedBox":3,
-    "selecteID":15,
+    "selecteID":14,
     "props":{"width":750,"sceneColor":"#ffffff","height":1280},
     "nodeParent":-1,
     "label":"Dialog",
@@ -66,7 +66,7 @@
                 {
                     "x":30,
                     "type":"Image",
-                    "props":{"y":300,"x":225,"var":"Lead","skin":"Enemy/10.png","name":"Lead","anchorY":0.5,"anchorX":0.5},
+                    "props":{"y":311,"x":225,"width":290,"var":"Lead","skin":"Enemy/10.png","name":"Lead","height":386,"anchorY":0.5,"anchorX":0.5},
                     "nodeParent":3,
                     "label":"Image(Lead)",
                     "isDirectory":false,
@@ -105,7 +105,7 @@
                 {
                     "x":30,
                     "type":"Image",
-                    "props":{"y":162,"x":325,"width":50,"skin":"index/LeadName.png","height":282},
+                    "props":{"y":162,"x":380,"width":50,"skin":"index/LeadName.png","height":282},
                     "nodeParent":3,
                     "label":"Image",
                     "isDirectory":false,
@@ -118,7 +118,7 @@
                 {
                     "x":30,
                     "type":"Text",
-                    "props":{"y":153,"x":330,"wordWrap":true,"width":40,"valign":"middle","text":"点击人物开始攻击","overflow":"visible","height":300,"fontSize":25,"font":"Arial","color":"#4f2823","bold":true,"align":"center"},
+                    "props":{"y":153,"x":386,"wordWrap":true,"width":40,"valign":"middle","text":"点击人物开始攻击","overflow":"visible","height":300,"fontSize":25,"font":"Arial","color":"#4f2823","bold":true,"align":"center"},
                     "nodeParent":3,
                     "label":"Text",
                     "isDirectory":false,

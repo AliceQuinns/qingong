@@ -48272,6 +48272,8 @@ var GAME;
         turntable.prototype.open = function (data) {
             this.GameInfo = data.volum;
             this.radices = data.speed;
+            if (Number(window["GameInfo"].volum) <= 0)
+                tips("您的抽奖券不足");
             this.targetUI = init_alert(ui.LuckdrawUI);
             this.btn = this.targetUI.getChildByName("content").getChildByName("_btn"); // 按钮
             this.turntable = this.targetUI.getChildByName("content").getChildByName("_turntable"); // 转盘
@@ -48286,7 +48288,7 @@ var GAME;
         turntable.prototype.event = function () {
             var _this = this;
             this.updatevoluce();
-            if (this.GameInfo <= 0) {
+            if (Number(window["GameInfo"].volum) <= 0) {
                 tips("抽奖券不足够");
                 return;
             }
@@ -48306,6 +48308,10 @@ var GAME;
                 // let size = 100;
                 // 按钮事件
                 _this.btn.once(Laya.Event.CLICK, _this, function (e) {
+                    if (Number(window["GameInfo"].volum) <= 0) {
+                        tips("抽奖券不足够");
+                        return;
+                    }
                     _this.admin(_this.turntable, (8 - Result) * 45, Laya.Handler.create(_this, function () {
                         // 奖励特效界面
                         _this.PropUI(Result, title, function () {
@@ -48373,8 +48379,8 @@ var GAME;
                     coin.visible = true;
                     coin.pos(-76, -245);
                     Textarea.visible = false;
-                    reward.text = "\u606D\u559C\u60A8\u83B7\u5F97\u91D1\u5E01" + Format((self.radices * 2).toString()) + "\u4E2A";
-                    Laya.stage.event("MoneyAdd", self.radices * 2);
+                    reward.text = "\u606D\u559C\u60A8\u83B7\u5F97\u91D1\u5E01" + Format(accMul(self.radices, 3600).toString()) + "\u4E2A";
+                    Laya.stage.event("MoneyAdd", accMul(self.radices, 3600));
                     break;
                 case 2:
                     // 太监
@@ -48383,7 +48389,8 @@ var GAME;
                     target.visible = true;
                     img.visible = true;
                     scaleAdmin(target);
-                    reward.text = "\u60A8\u8D4F\u8D50\u592A\u76D1\u603B\u7BA1" + Format((self.radices).toString()) + "\u4E2A\u91D1\u5E01";
+                    reward.text = "\u60A8\u8D4F\u8D50\u592A\u76D1\u603B\u7BA1" + Format(accMul(self.radices, 3600).toString()) + "\u4E2A\u91D1\u5E01";
+                    Laya.stage.event("MoneyReduce", accMul(self.radices, 3600));
                     // 处理字体
                     fontAdmin(title.slice(0, 15), 0, Textarea.width * 0.65, 50, 40, Textarea); // 右边文字
                     fontAdmin(title.slice(15, title.length), 0, Textarea.width * 0.15, 50, 40, Textarea); // 左边文字
@@ -48395,8 +48402,8 @@ var GAME;
                     coin.visible = true;
                     coin.pos(-76, -245);
                     Textarea.visible = false;
-                    reward.text = "\u606D\u559C\u60A8\u83B7\u5F97\u91D1\u5E01" + Format((self.radices * 3).toString()) + "\u4E2A";
-                    Laya.stage.event("MoneyAdd", self.radices * 3);
+                    reward.text = "\u606D\u559C\u60A8\u83B7\u5F97\u91D1\u5E01" + Format(accMul(self.radices, 5400).toString()) + "\u4E2A";
+                    Laya.stage.event("MoneyAdd", accMul(self.radices, 5400));
                     break;
                 case 4:
                     // 皇后
@@ -48441,8 +48448,8 @@ var GAME;
                     coin.visible = true;
                     coin.pos(-76, -245);
                     Textarea.visible = false;
-                    reward.text = "\u606D\u559C\u60A8\u83B7\u5F97\u91D1\u5E01" + Format((self.radices).toString()) + "\u4E2A";
-                    Laya.stage.event("MoneyAdd", self.radices);
+                    reward.text = "\u606D\u559C\u60A8\u83B7\u5F97\u91D1\u5E01" + Format(accMul(self.radices, 1800).toString()) + "\u4E2A";
+                    Laya.stage.event("MoneyAdd", accMul(self.radices, 1800));
                     break;
                 default:
                     console.log("道具界面 类型错误");
@@ -48453,6 +48460,7 @@ var GAME;
         turntable.prototype.updatevoluce = function () {
             var text = this.targetUI.getChildByName("content").getChildByName("Lottery");
             text.text = window["GameInfo"].volum;
+            Laya.stage.event("updateCoin");
         };
         return turntable;
     }());
@@ -48540,7 +48548,7 @@ var GAME;
             // 短震动
             shock(1);
             // 攻击动画
-            attackadmin(pos, 100, { x: pos.x - pos.width / 2, y: pos.y - pos.height / 2 }, 0.01, this.bazdir);
+            attackadmin(pos, 100, { x: pos.x - pos.width / 2, y: pos.y }, 0.01, this.bazdir);
             this.bazdir = !this.bazdir;
             // 窗口抖动
             windowshack(2, 1, 300);
@@ -48552,6 +48560,7 @@ var GAME;
             scaleelastic(pos);
             // 巴掌音效
             window["_audio"]._Sound("slap");
+            window["_audio"]._Sound("jiao");
         };
         return palace;
     }());
@@ -48621,6 +48630,7 @@ var GAME;
                 else if (data['status'] === "success") {
                     _this.customEvent(); // 自定义事件
                     _this.staticObj(); // 静态化常用变量
+                    _this.Floaticon(); // 引导收藏图标
                     console.log(data);
                     // 非新用户显示离线收益与签到
                     if (data.isnew.toString() === "2") {
@@ -48676,6 +48686,31 @@ var GAME;
                 console.log(err, "无法请求数据");
                 tips("获取不到您的信息");
             });
+        };
+        // 浮动收藏图标
+        index.prototype.Floaticon = function () {
+            var _this = this;
+            var icon = new Laya.Image("index/bag.png");
+            this.indexUI.addChild(icon);
+            icon.pos(this.indexUI.help.x - 50, this.indexUI.help.y + 20);
+            icon.anchorX = 0.5;
+            icon.anchorY = 0.5;
+            rotationPos(icon, 20, -20, 100, function () {
+                icon.destroy();
+                window.setTimeout(function () {
+                    _this.Floaticon();
+                }, 100000);
+            });
+            icon.on(Laya.Event.CLICK, this, function () {
+                init_alert(ui.shareUI, null, function () {
+                    window.setTimeout(function () {
+                        _this.Floaticon();
+                    }, 100000);
+                });
+                Laya.Tween.clearAll(icon);
+                icon.destroy();
+            });
+            // window["asdv"] = icon;
         };
         // 签到
         index.prototype.Signin = function (day) {
@@ -48788,6 +48823,7 @@ var GAME;
                 if (_this.Audioctr) {
                     // 开启
                     window["_audio"].control("open");
+                    window["_audio"].onBGM();
                     _this.indexUI.audioCtr.skin = "index/voice1.png";
                 }
                 else {
@@ -48857,6 +48893,8 @@ var GAME;
             // 添加抽奖券
             Laya.stage.on("volumAdd", this, function (e) {
                 _this.GameInfo.volum += Number(e);
+                if (_this.GameInfo.volum <= 0)
+                    _this.GameInfo.volum = 0;
                 if (_this.GameInfo.volum >= 50)
                     _this.GameInfo.volum = 50;
             });
@@ -48890,8 +48928,11 @@ var GAME;
             });
             // 更新玩家解锁等级
             Laya.stage.on("rolelevelSet", this, function (e) {
-                if (!!e)
+                if (!!e) {
                     _this.GameInfo.role_level = e;
+                    _this.GameInfo.grade = e + 4;
+                }
+                ;
                 console.log("更新人物解锁等级为", e);
             });
             // 更新服务器数据信息
@@ -49048,6 +49089,7 @@ var GAME;
         shop.prototype.open = function () {
             var _this = this;
             var data = this.list; // 人物数据
+            // console.log(data);
             var lockListUI = init_alert(ui.lockListUI);
             var target = lockListUI._list; // 列表节点
             target.vScrollBarSkin = '';
@@ -49058,12 +49100,13 @@ var GAME;
                 if (index > data.length)
                     return;
                 var userData = data[index]; // 单项数据
-                var price = cell.getChildByName('btn_coin').getChildByName("btn_coin_text"); // 价格
-                price.text = Format(userData.price);
                 var LeadName = cell.getChildByName("LeadName"); // 姓名
                 LeadName.text = userData.name;
+                LeadName.visible = true;
                 if (userData.type === 1) {
                     // 已解锁
+                    var price_1 = cell.getChildByName('btn_coin').getChildByName("btn_coin_text"); // 价格
+                    price_1.text = Format(userData.price);
                     var Invisible = cell.getChildByName("Invisible"); // 关闭未解锁图标
                     Invisible.visible = false;
                     var grade = cell.getChildByName("grade"); // 等级
@@ -49086,13 +49129,15 @@ var GAME;
                     priceBtn.disabled = false;
                     addClick(priceBtn, function () {
                         _this.purchase(userData.grade, userData.price, function (data) {
-                            price.text = Format(data.price); // 更新购买后的价格
+                            price_1.text = Format(data.price); // 更新购买后的价格
                         });
                         console.log(userData.grade);
                     }, _this, true);
                 }
-                else if (userData.type === 2) {
+                else if (userData.type === 2 && Number(userData.grade) > Number(window["GameInfo"].grade)) {
                     // 未解锁
+                    var price = cell.getChildByName('btn_coin').getChildByName("btn_coin_text"); // 价格
+                    price.text = "未解锁";
                     var Invisible = cell.getChildByName("Invisible"); // 未解锁图标
                     Invisible.visible = true;
                     var lead_2 = cell.getChildByName("lead"); // 主角
@@ -49101,6 +49146,23 @@ var GAME;
                     grade.visible = false;
                     var grade_bg = cell.getChildByName("grade_bg"); // 等级背景
                     grade_bg.visible = false;
+                    var priceBtn = cell.getChildByName('btn_coin'); // 购买按钮
+                    priceBtn.disabled = true;
+                    LeadName.visible = false;
+                }
+                else {
+                    var price = cell.getChildByName('btn_coin').getChildByName("btn_coin_text"); // 价格
+                    price.text = "未解锁";
+                    var Invisible = cell.getChildByName("Invisible"); // 开启未解锁图标
+                    Invisible.visible = false;
+                    var grade = cell.getChildByName("grade"); // 等级
+                    grade.visible = true;
+                    grade.text = userData.grade;
+                    var grade_bg = cell.getChildByName("grade_bg"); // 等级背景
+                    grade_bg.visible = true;
+                    var lead_3 = cell.getChildByName("lead"); // 主角
+                    lead_3.skin = "Lead/" + userData.grade + ".png";
+                    lead_3.visible = true;
                     var priceBtn = cell.getChildByName('btn_coin'); // 购买按钮
                     priceBtn.disabled = true;
                 }
@@ -49322,6 +49384,7 @@ var drag = function (element, callback) {
     };
     // 拖动前
     element.on(Laya.Event.MOUSE_DOWN, _this, function (e) {
+        window["_audio"].random();
         // 更新位置
         position.x = element.x;
         position.y = element.y;
@@ -49366,7 +49429,7 @@ var drag = function (element, callback) {
             }
             if (!isCollision) {
                 console.log("未发生任何碰撞 自动返回初始位置");
-                Laya.Tween.to(element, { x: position.x, y: position.y }, 100);
+                Laya.Tween.to(element, { x: position.x, y: position.y }, 50);
             }
         }
         else {
@@ -49600,6 +49663,22 @@ var ContrastNumber = function (a, b) {
         return true;
     return Boolean(aMaxb);
 };
+// 数值乘法
+var accMuls = function (a, b) {
+    var arra = a.split('').reverse(), arrb = b.split('').reverse(), lena = arra.length, lenb = arrb.length, result = Array(lena + lenb + 1).join('0').split('');
+    arra.map(function (itema, indexa) {
+        arrb.map(function (itemb, indexb) {
+            result[indexa + indexb] = +result[indexa + indexb] + itema * itemb;
+        });
+    });
+    result.map(function (item, index) {
+        if (item >= 10) {
+            result[index + 1] = ~~result[index + 1] + ~~(result[index] / 10);
+            result[index] %= 10;
+        }
+    });
+    return result.reverse().join('').replace(/^0+/, '');
+};
 // 超大数值乘法
 var accMul = function (arg1, arg2) {
     var m = 0, s1 = arg1.toString(), s2 = arg2.toString();
@@ -49611,8 +49690,50 @@ var accMul = function (arg1, arg2) {
         m += s2.split(".")[1].length;
     }
     catch (e) { }
-    return Number(s1.replace(".", "")) * Number(s2.replace(".", "")) / Math.pow(10, m);
+    var targe = accMuls(Number(s1.replace(".", "")).toString(), Number(s2.replace(".", "")).toString());
+    return accDiv(targe, Math.pow(10, m)).toString();
 };
+// 超大数值除法运算
+function accDiv(arg1, arg2) {
+    var t1 = 0, t2 = 0, t3 = 0, r1, r2;
+    try {
+        t1 = arg1.toString().split(".")[1].length;
+    }
+    catch (e) { }
+    try {
+        t2 = arg2.toString().split(".")[1].length;
+    }
+    catch (e) { }
+    r1 = Number(arg1.toString().replace(".", ""));
+    r2 = Number(arg2.toString().replace(".", ""));
+    if (r2 == 0)
+        return 0;
+    var result = String(r1 / r2);
+    try {
+        t3 = result.toString().split(".")[1].length;
+    }
+    catch (e) { }
+    var index = t2 - t1 - t3;
+    if (index < 0) {
+        result = result.replace(".", "");
+        while (result.length <= Math.abs(index)) {
+            result = '0' + result;
+        }
+        var start = result.substring(0, result.length + index);
+        var end = result.substring(result.length + index, result.length);
+        result = start + '.' + end;
+        return Number(result);
+    }
+    else if (index > 0) {
+        result = result.replace(".", "");
+        while (result.length <= Math.abs(index)) {
+            result += '0';
+        }
+        return Number(result);
+    }
+    else
+        return Number(result.replace(".", ""));
+}
 // 数值格式化
 var Format = function (value) {
     var a = value;
@@ -49711,7 +49832,7 @@ var loveadmin = function (target, time, pos, playback) {
     skeleton.playbackRate(playback);
     target.addChild(skeleton);
     skeleton.pos(pos.x, pos.y);
-    skeleton.load("https://shop.yunfanshidai.com/xcxht/qinggong/res/animation/aixng/love.sk");
+    skeleton.load("https://shop.yunfanshidai.com/xcxht/qinggong/res/adminion/aixng/love.sk");
     window.setTimeout(function () {
         skeleton.destroy();
     }, time);
@@ -49763,7 +49884,7 @@ var movePos = function (target, targetPos, endPos, frequency) {
             target["frequency"] += 1;
             movePos(target, targetPos, endPos, frequency);
         }), null);
-        console.log("true");
+        // console.log("true");
     }
     else {
         Laya.Tween.to(target, { x: endPos.x, y: endPos.y }, 1000, Laya.Ease.backInOut, Laya.Handler.create(_this, function () {
@@ -49771,22 +49892,52 @@ var movePos = function (target, targetPos, endPos, frequency) {
             target["frequency"] += 1;
             movePos(target, targetPos, endPos, frequency);
         }), null);
-        console.log("false");
+        // console.log("false");
     }
 };
 // 升级动画
 var upgradeAdmin = function (targeA, targetB, pos, callback, office) {
     if (office === void 0) { office = 50; }
     // left_obj
-    Laya.Tween.to(targeA, { x: targeA.x + office }, 500, Laya.Ease.backInOut, Laya.Handler.create(_this, function () {
-        Laya.Tween.to(targeA, { x: pos.x }, 500, Laya.Ease.backInOut, null, null);
+    Laya.Tween.to(targeA, { x: targeA.x + office }, 200, Laya.Ease.circOut, Laya.Handler.create(_this, function () {
+        Laya.Tween.to(targeA, { x: pos.x }, 200, Laya.Ease.circOut, null, null);
     }), null);
     // right_obj  
-    Laya.Tween.to(targetB, { x: targetB.x - office }, 500, Laya.Ease.backInOut, Laya.Handler.create(_this, function () {
-        Laya.Tween.to(targetB, { x: pos.x }, 500, Laya.Ease.backInOut, Laya.Handler.create(_this, function () {
+    Laya.Tween.to(targetB, { x: targetB.x - office }, 200, Laya.Ease.circOut, Laya.Handler.create(_this, function () {
+        Laya.Tween.to(targetB, { x: pos.x }, 200, Laya.Ease.circOut, Laya.Handler.create(_this, function () {
             callback();
         }), null);
     }), null);
+};
+// 重复旋转动画
+var rotationPos = function (target, targetPos, endPos, frequency, callback) {
+    // console.log(callback);
+    Laya.Tween.clearAll(target);
+    // 记录次数
+    if (!target["frequency"])
+        target["frequency"] = 0;
+    if (target["frequency"] >= frequency) {
+        // console.log("结束",callback);
+        if (!!callback)
+            callback();
+        target["frequency"] = 0;
+        return;
+    }
+    // 开始缓动
+    if (target["moveType"]) {
+        Laya.Tween.to(target, { rotation: targetPos }, 300, Laya.Ease.sineIn, Laya.Handler.create(_this, function () {
+            target["moveType"] = !target["moveType"];
+            target["frequency"] += 1;
+            rotationPos(target, targetPos, endPos, frequency, callback);
+        }), null);
+    }
+    else {
+        Laya.Tween.to(target, { rotation: endPos }, 300, Laya.Ease.sineIn, Laya.Handler.create(_this, function () {
+            target["moveType"] = !target["moveType"];
+            target["frequency"] += 1;
+            rotationPos(target, targetPos, endPos, frequency, callback);
+        }), null);
+    }
 };
 // 窗口抖动
 var windowshack = function (shackx, shacky, time) {
@@ -49916,6 +50067,7 @@ var GAME;
                 audios2: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/audios2.mp3",
                 audios3: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/audios3.mp3",
                 audios4: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/audios4.mp3",
+                jiao: "https://shop.yunfanshidai.com/xcxht/qinggong/res/audio/jiao.mp3"
             };
             this.audiopool = {}; // 音频池
             this.status = true; // 全局音频控制
@@ -50096,8 +50248,8 @@ var GAME;
             this.cycle = (!!data.cycle) ? Number(data.cycle) : console.log("未获取到周期");
             this.range = adminPool.Range; // 动画边界
             this.speed = {
-                x: this.cycle / 2 / 1000,
-                y: this.cycle / 2 / 10000
+                x: this.cycle / 5 / 1000,
+                y: this.cycle / 5 / 10000
             };
             this.init();
         }
@@ -50177,26 +50329,25 @@ var GAME;
         // 升级
         lead.prototype.upgrade = function (datas) {
             var _this = this;
-            console.log("开始升级");
-            Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/composerole.php", {
-                openid: LeadInfo.openID,
-                role1: this.id,
-                role2: datas.id,
-                position: datas.pos,
-            }, function (data) {
-                var targetobjs;
-                if (datas.AdminTimer) {
-                    targetobjs = datas.icon.child;
-                }
-                else {
-                    targetobjs = datas.icon.parent;
-                }
-                _this.icon.parent.y = targetobjs.y;
-                // 合体动画
-                upgradeAdmin(_this.icon.parent, targetobjs, { x: targetobjs.x, y: targetobjs.y }, function () {
-                    loveadmin(_this.stage, 350, { x: datas.position.x + 50, y: datas.position.y + 50 }); // 爱心动画
-                    _this.delete();
-                    datas.delete();
+            var targetobjs;
+            if (datas.AdminTimer) {
+                targetobjs = datas.icon.child;
+            }
+            else {
+                targetobjs = datas.icon.parent;
+            }
+            this.icon.parent.y = targetobjs.y;
+            // 合体动画
+            upgradeAdmin(this.icon.parent, targetobjs, { x: targetobjs.x, y: targetobjs.y }, function () {
+                loveadmin(_this.stage, 350, { x: datas.position.x + 50, y: datas.position.y + 50 }); // 爱心动画
+                _this.delete();
+                datas.delete();
+                Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/composerole.php", {
+                    openid: LeadInfo.openID,
+                    role1: _this.id,
+                    role2: datas.id,
+                    position: datas.pos,
+                }, function (data) {
                     tips("升级成功");
                     var user = {
                         roleid: data.roleid,
@@ -50207,17 +50358,17 @@ var GAME;
                         cycle: data.cycle,
                     };
                     var newLead = new GAME.lead(user, _this.stage);
-                    Laya.stage.event("Synthesis", newLead); // 发送合成事件
+                    // Laya.stage.event("Synthesis", newLead);// 发送合成事件
                     if (!!data.role_level)
                         Laya.stage.event("rolelevelSet", data.role_level); // 更新人物解锁等级
                     if (!!data.islock && data.islock === 2) {
                         console.log("人物解锁列表更新");
                         _this.unlock(data.lockinfo, data.lockinfo.role_name);
                     }
+                }, function (err) {
+                    tips("升级失败");
+                    Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 100);
                 });
-            }, function (err) {
-                tips("升级失败");
-                Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 100);
             });
         };
         // 更换位置
@@ -50385,6 +50536,8 @@ var GAME;
         lead.prototype.endWork = function () {
             var _this = this;
             this.icon.child.once(Laya.Event.CLICK, this, function (e) {
+                Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 50);
+                window["_audio"].random();
                 Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/stoprole.php", {
                     openid: LeadInfo.openID,
                     roleid: _this.id,
@@ -50393,7 +50546,6 @@ var GAME;
                     _this.AdminTimer = false; // 停止动画
                     _this.icon.child.alpha = 0;
                     _this.cointimer("stop"); // 停止工作
-                    Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 100);
                     window.setTimeout(function () {
                         _this.icon.parent.touchState = true; // 开启拖动
                         Laya.stage.event("adminpool", -1);
@@ -50401,7 +50553,7 @@ var GAME;
                     }, 500);
                 }, function (err) {
                     console.log("无法停止工作");
-                    Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 100);
+                    Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 50);
                 });
             });
         };
@@ -50449,7 +50601,7 @@ var ui;
             _super.prototype.createChildren.call(this);
             this.createView(ui.BattleUI.uiView);
         };
-        BattleUI.uiView = { "type": "Dialog", "props": { "width": 750, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": -102, "x": -159, "width": 1107, "skin": "index/mask.png", "height": 1570, "alpha": 0.7 } }, { "type": "Image", "props": { "y": 667, "x": 347, "width": 451, "var": "content", "name": "content", "height": 737, "anchorY": 0.5, "anchorX": 0.5 }, "child": [{ "type": "Image", "props": { "y": 1, "x": 45, "skin": "index/name_bg.png" } }, { "type": "Text", "props": { "y": 14, "x": 46, "width": 361, "var": "Leadname", "text": "容嚒嚒", "overflow": "hidden", "name": "Leadname", "height": 50, "fontSize": 50, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": 300, "x": 225, "var": "Lead", "skin": "Enemy/10.png", "name": "Lead", "anchorY": 0.5, "anchorX": 0.5 } }, { "type": "Text", "props": { "y": 577, "x": 141, "wordWrap": true, "width": 255, "var": "textcont", "valign": "middle", "text": "赏赐对方5个巴掌可获得500金币", "overflow": "hidden", "name": "textcont", "height": 159, "fontSize": 30, "font": "Arial", "color": "#ffffff", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": 622, "x": 79, "skin": "index/hand.png" } }, { "type": "Image", "props": { "y": 162, "x": 325, "width": 50, "skin": "index/LeadName.png", "height": 282 } }, { "type": "Text", "props": { "y": 153, "x": 330, "wordWrap": true, "width": 40, "valign": "middle", "text": "点击人物开始攻击", "overflow": "visible", "height": 300, "fontSize": 25, "font": "Arial", "color": "#4f2823", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": 576, "x": 53, "skin": "index/biankuang.png" } }] }, { "type": "Image", "props": { "y": 305, "x": 586, "var": "close_Btn", "skin": "index/close.png", "name": "close_Btn", "anchorY": 0.5, "anchorX": 0.5 } }] };
+        BattleUI.uiView = { "type": "Dialog", "props": { "width": 750, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": -102, "x": -159, "width": 1107, "skin": "index/mask.png", "height": 1570, "alpha": 0.7 } }, { "type": "Image", "props": { "y": 667, "x": 347, "width": 451, "var": "content", "name": "content", "height": 737, "anchorY": 0.5, "anchorX": 0.5 }, "child": [{ "type": "Image", "props": { "y": 1, "x": 45, "skin": "index/name_bg.png" } }, { "type": "Text", "props": { "y": 14, "x": 46, "width": 361, "var": "Leadname", "text": "容嚒嚒", "overflow": "hidden", "name": "Leadname", "height": 50, "fontSize": 50, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": 311, "x": 225, "width": 290, "var": "Lead", "skin": "Enemy/10.png", "name": "Lead", "height": 386, "anchorY": 0.5, "anchorX": 0.5 } }, { "type": "Text", "props": { "y": 577, "x": 141, "wordWrap": true, "width": 255, "var": "textcont", "valign": "middle", "text": "赏赐对方5个巴掌可获得500金币", "overflow": "hidden", "name": "textcont", "height": 159, "fontSize": 30, "font": "Arial", "color": "#ffffff", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": 622, "x": 79, "skin": "index/hand.png" } }, { "type": "Image", "props": { "y": 162, "x": 380, "width": 50, "skin": "index/LeadName.png", "height": 282 } }, { "type": "Text", "props": { "y": 153, "x": 386, "wordWrap": true, "width": 40, "valign": "middle", "text": "点击人物开始攻击", "overflow": "visible", "height": 300, "fontSize": 25, "font": "Arial", "color": "#4f2823", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": 576, "x": 53, "skin": "index/biankuang.png" } }] }, { "type": "Image", "props": { "y": 305, "x": 586, "var": "close_Btn", "skin": "index/close.png", "name": "close_Btn", "anchorY": 0.5, "anchorX": 0.5 } }] };
         return BattleUI;
     }(Dialog));
     ui.BattleUI = BattleUI;
@@ -50481,7 +50633,7 @@ var ui;
             _super.prototype.createChildren.call(this);
             this.createView(ui.LuckdrawUI.uiView);
         };
-        LuckdrawUI.uiView = { "type": "Dialog", "props": { "width": 750, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": -112, "x": -171, "width": 1107, "skin": "index/mask.png", "height": 1570, "alpha": 0.7 } }, { "type": "Image", "props": { "y": 620, "x": 383, "var": "content", "name": "content", "anchorY": 0.5, "anchorX": 0.5 }, "child": [{ "type": "Image", "props": { "y": -494, "x": -354, "skin": "index/bg2.png" } }, { "type": "Button", "props": { "y": 360, "x": -181, "var": "_btn", "stateNum": 2, "skin": "index/btn3.png", "name": "_btn" } }, { "type": "Image", "props": { "y": -91, "x": -25, "var": "_turntable", "skin": "index/zhuanpan.png", "name": "_turntable", "anchorY": 0.5, "anchorX": 0.5 } }, { "type": "Image", "props": { "y": -110, "x": -33, "width": 225, "skin": "index/choujiang.png", "rotation": 0, "height": 277, "anchorY": 0.5, "anchorX": 0.5 } }, { "type": "Image", "props": { "y": 191, "x": -184, "var": "hua1", "skin": "index/hua.png", "rotation": 9, "name": "hua1", "anchorY": 0.5, "anchorX": 0.5 } }, { "type": "Image", "props": { "y": 191, "x": 110, "var": "hua2", "skin": "index/hua.png", "rotation": -9, "name": "hua2", "anchorY": 0.5, "anchorX": 0.5 } }, { "type": "Text", "props": { "y": 241, "x": -41, "var": "Lottery", "text": "50", "name": "Lottery", "fontSize": 30, "font": "Arial", "color": "#ff3200", "bold": true } }, { "type": "Image", "props": { "y": 245, "x": 18, "width": 21, "skin": "index/add2.png", "height": 21 } }] }, { "type": "Image", "props": { "y": 184, "x": 658, "var": "close_Btn", "skin": "index/close.png", "name": "close_Btn", "anchorY": 0.5, "anchorX": 0.5 } }] };
+        LuckdrawUI.uiView = { "type": "Dialog", "props": { "width": 750, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": -112, "x": -171, "width": 1107, "skin": "index/mask.png", "height": 1570, "alpha": 0.7 } }, { "type": "Image", "props": { "y": 620, "x": 383, "var": "content", "name": "content", "anchorY": 0.5, "anchorX": 0.5 }, "child": [{ "type": "Image", "props": { "y": -494, "x": -354, "skin": "index/bg2.png" } }, { "type": "Button", "props": { "y": 360, "x": -181, "var": "_btn", "stateNum": 2, "skin": "index/btn3.png", "name": "_btn" } }, { "type": "Image", "props": { "y": -91, "x": -25, "var": "_turntable", "skin": "index/zhuanpan.png", "name": "_turntable", "anchorY": 0.5, "anchorX": 0.5 } }, { "type": "Image", "props": { "y": -110, "x": -33, "width": 225, "skin": "index/choujiang.png", "rotation": 0, "height": 277, "anchorY": 0.5, "anchorX": 0.5 } }, { "type": "Image", "props": { "y": 191, "x": -184, "var": "hua1", "skin": "index/hua.png", "rotation": 9, "name": "hua1", "anchorY": 0.5, "anchorX": 0.5 } }, { "type": "Image", "props": { "y": 191, "x": 110, "var": "hua2", "skin": "index/hua.png", "rotation": -9, "name": "hua2", "anchorY": 0.5, "anchorX": 0.5 } }, { "type": "Text", "props": { "y": 241, "x": -78, "width": 91, "var": "Lottery", "text": "50", "name": "Lottery", "height": 30, "fontSize": 30, "font": "Arial", "color": "#d43835", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": 232, "x": 11, "width": 46, "var": "addjiangquan", "skin": "index/add2.png", "name": "addjiangquan", "height": 46 } }] }, { "type": "Image", "props": { "y": 184, "x": 658, "var": "close_Btn", "skin": "index/close.png", "name": "close_Btn", "anchorY": 0.5, "anchorX": 0.5 } }] };
         return LuckdrawUI;
     }(Dialog));
     ui.LuckdrawUI = LuckdrawUI;
@@ -50513,7 +50665,7 @@ var ui;
             _super.prototype.createChildren.call(this);
             this.createView(ui.alertUI.uiView);
         };
-        alertUI.uiView = { "type": "Dialog", "props": { "width": 750, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": -110, "x": -171, "width": 1107, "skin": "index/mask.png", "height": 1570, "alpha": 0.7 } }, { "type": "Image", "props": { "y": 622, "x": 361, "var": "content", "skin": "index/tips_bg.png", "name": "content", "anchorY": 0.5, "anchorX": 0.5 }, "child": [{ "type": "Text", "props": { "y": 8, "x": 131, "width": 300, "var": "title", "valign": "middle", "text": "离线收益", "name": "title", "height": 60, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": 201, "x": 229, "width": 105, "var": "icon", "skin": "index/copper2.png", "name": "icon", "height": 105 } }, { "type": "Text", "props": { "y": 330, "x": 16, "width": 537, "var": "contentText", "valign": "middle", "name": "contentText", "height": 78, "fontSize": 50, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Text", "props": { "y": 101, "x": 68, "wordWrap": true, "width": 444, "var": "tipsText", "valign": "middle", "text": "在您离线时获得", "overflow": "hidden", "name": "tipsText", "height": 78, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }] }, { "type": "Image", "props": { "y": 410, "x": 621, "var": "close_Btn", "skin": "index/close.png", "name": "close_Btn", "anchorY": 0.5, "anchorX": 0.5 } }] };
+        alertUI.uiView = { "type": "Dialog", "props": { "width": 750, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": -110, "x": -171, "width": 1107, "skin": "index/mask.png", "height": 1570, "alpha": 0.7 } }, { "type": "Image", "props": { "y": 622, "x": 361, "var": "content", "skin": "index/tips_bg.png", "name": "content", "anchorY": 0.5, "anchorX": 0.5 }, "child": [{ "type": "Text", "props": { "y": 8, "x": 131, "width": 300, "var": "title", "valign": "middle", "text": "离线收益", "name": "title", "height": 60, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": 200, "x": 190, "var": "icon", "skin": "index/money.png", "name": "icon" } }, { "type": "Text", "props": { "y": 330, "x": 16, "width": 537, "var": "contentText", "valign": "middle", "name": "contentText", "height": 78, "fontSize": 50, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Text", "props": { "y": 101, "x": 68, "wordWrap": true, "width": 444, "var": "tipsText", "valign": "middle", "text": "在您离线时获得", "overflow": "hidden", "name": "tipsText", "height": 78, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }] }, { "type": "Image", "props": { "y": 410, "x": 621, "var": "close_Btn", "skin": "index/close.png", "name": "close_Btn", "anchorY": 0.5, "anchorX": 0.5 } }] };
         return alertUI;
     }(Dialog));
     ui.alertUI = alertUI;
@@ -50544,7 +50696,7 @@ var ui;
             _super.prototype.createChildren.call(this);
             this.createView(ui.indexUI.uiView);
         };
-        indexUI.uiView = { "type": "View", "props": { "width": 720, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "skin": "index/bg.png", "name": "bg" } }, { "type": "Image", "props": { "y": 547, "x": 203, "skin": "index/select.png" } }, { "type": "Image", "props": { "y": 575, "x": 244, "width": 120, "var": "pool1", "skin": "index/Leadbg.png", "name": "pool1", "height": 120 } }, { "type": "Image", "props": { "y": 575, "x": 402, "width": 120, "var": "pool2", "skin": "index/Leadbg.png", "name": "pool2", "height": 120 } }, { "type": "Image", "props": { "y": 575, "x": 559, "width": 120, "var": "pool3", "skin": "index/Leadbg.png", "name": "pool3", "height": 120 } }, { "type": "Image", "props": { "y": 710, "x": 244, "width": 120, "var": "pool4", "skin": "index/Leadbg.png", "name": "pool4", "height": 120 } }, { "type": "Image", "props": { "y": 710, "x": 402, "width": 120, "var": "pool5", "skin": "index/Leadbg.png", "name": "pool5", "height": 120 } }, { "type": "Image", "props": { "y": 710, "x": 559, "width": 120, "var": "pool6", "skin": "index/Leadbg.png", "name": "pool6", "height": 120 } }, { "type": "Image", "props": { "y": 844, "x": 244, "width": 120, "var": "pool7", "skin": "index/Leadbg.png", "name": "pool7", "height": 120 } }, { "type": "Image", "props": { "y": 844, "x": 402, "width": 120, "var": "pool8", "skin": "index/Leadbg.png", "name": "pool8", "height": 120 } }, { "type": "Image", "props": { "y": 844, "x": 559, "width": 120, "var": "pool9", "skin": "index/Leadbg.png", "name": "pool9", "height": 120 } }, { "type": "Image", "props": { "y": 979, "x": 244, "width": 120, "var": "pool10", "skin": "index/Leadbg.png", "name": "pool10", "height": 120 } }, { "type": "Image", "props": { "y": 979, "x": 402, "width": 120, "var": "pool11", "skin": "index/Leadbg.png", "name": "pool11", "height": 120 } }, { "type": "Image", "props": { "y": 979, "x": 559, "width": 120, "var": "pool12", "skin": "index/Leadbg.png", "name": "pool12", "height": 120 } }, { "type": "Image", "props": { "y": 0, "x": 0, "width": 720, "var": "AnimationPool", "name": "AnimationPool", "height": 550 } }, { "type": "Image", "props": { "y": 552, "x": 9, "var": "palace", "skin": "index/lenggong.png", "name": "palace" } }, { "type": "Image", "props": { "y": 1147, "x": 47, "width": 92, "var": "recovery", "skin": "index/delect.png", "name": "recovery", "height": 111 } }, { "type": "Button", "props": { "y": 1150, "x": 343, "width": 248, "var": "purchase", "stateNum": 2, "skin": "index/btn1.png", "name": "purchase", "height": 117 } }, { "type": "Image", "props": { "y": 1159, "x": 203, "skin": "index/recovery.png" } }, { "type": "Image", "props": { "y": 1018, "x": 34, "width": 118, "var": "Luckdraw", "skin": "index/invite.png", "name": "Luckdraw", "height": 118 } }, { "type": "Image", "props": { "y": 719, "x": 43, "width": 100, "skin": "index/rank.png", "height": 143 } }, { "type": "Button", "props": { "y": 1150, "x": 601, "width": 115, "var": "shop", "stateNum": 2, "skin": "index/btn2.png", "name": "shop", "height": 115 } }, { "type": "Image", "props": { "y": 21, "x": 16, "skin": "index/yuanbao_bg.png" } }, { "type": "Image", "props": { "y": 33, "x": 32, "skin": "index/yuanbao.png" } }, { "type": "Image", "props": { "y": 27, "x": 195, "width": 43, "var": "addcoin", "skin": "index/add2.png", "name": "addcoin", "height": 43 } }, { "type": "Image", "props": { "y": 20, "x": 265, "skin": "index/yuanbao_bg.png" } }, { "type": "Image", "props": { "y": 29, "x": 284, "width": 38, "skin": "index/copper2.png", "height": 38 } }, { "type": "Image", "props": { "y": 26, "x": 443, "width": 43, "var": "addmoney", "skin": "index/add2.png", "name": "addmoney", "height": 43 } }, { "type": "Text", "props": { "y": 110, "x": 325, "var": "coinspeed", "text": "0/秒", "name": "coinspeed", "fontSize": 35, "font": "Arial", "color": "#653e21", "bold": true } }, { "type": "Image", "props": { "y": 107, "x": 265, "width": 46, "skin": "index/copper2.png", "height": 46 } }, { "type": "Text", "props": { "y": 31, "x": 85, "width": 107, "var": "_Diamonds", "text": "8.888B", "name": "_Diamonds", "height": 30, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Text", "props": { "y": 31, "x": 326, "width": 113, "var": "coin", "text": "8.888B", "name": "coin", "height": 30, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Text", "props": { "y": 1226, "x": 418, "width": 155, "var": "purchase_text", "text": "1.8888B", "name": "purchase_text", "height": 25, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true } }, { "type": "Image", "props": { "y": 878, "x": 33, "width": 120, "var": "turntable", "skin": "index/luck.png", "name": "turntable", "height": 129 } }, { "type": "Image", "props": { "y": 201, "x": 146, "width": 421, "var": "adminrange", "name": "adminrange", "height": 169 } }, { "type": "Image", "props": { "y": 91, "x": 27, "skin": "index/yuhuayuan.png" } }, { "type": "Box", "props": { "y": 495, "x": 189, "var": "adminList", "name": "adminList" }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "var": "adminList1", "skin": "index/weizhi2.png", "name": "adminList1" } }, { "type": "Image", "props": { "y": 0, "x": 72, "var": "adminList2", "skin": "index/weizhi2.png", "name": "adminList2" } }, { "type": "Image", "props": { "y": 0, "x": 144, "var": "adminList3", "skin": "index/weizhi2.png", "name": "adminList3" } }, { "type": "Image", "props": { "y": 0, "x": 216, "var": "adminList4", "skin": "index/weizhi2.png", "name": "adminList4" } }, { "type": "Image", "props": { "y": 0, "x": 288, "var": "adminList5", "skin": "index/weizhi2.png", "name": "adminList5" } }] }, { "type": "Image", "props": { "y": 97, "x": 636, "var": "help", "skin": "index/help.png", "name": "help" } }, { "type": "Image", "props": { "y": 179, "x": 638, "var": "audioCtr", "skin": "index/voice1.png", "name": "audioCtr" } }] };
+        indexUI.uiView = { "type": "View", "props": { "width": 720, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "skin": "index/bg.png", "name": "bg" } }, { "type": "Image", "props": { "y": 547, "x": 203, "skin": "index/select.png" } }, { "type": "Image", "props": { "y": 575, "x": 244, "width": 120, "var": "pool1", "skin": "index/Leadbg.png", "name": "pool1", "height": 120 } }, { "type": "Image", "props": { "y": 575, "x": 402, "width": 120, "var": "pool2", "skin": "index/Leadbg.png", "name": "pool2", "height": 120 } }, { "type": "Image", "props": { "y": 575, "x": 559, "width": 120, "var": "pool3", "skin": "index/Leadbg.png", "name": "pool3", "height": 120 } }, { "type": "Image", "props": { "y": 710, "x": 244, "width": 120, "var": "pool4", "skin": "index/Leadbg.png", "name": "pool4", "height": 120 } }, { "type": "Image", "props": { "y": 710, "x": 402, "width": 120, "var": "pool5", "skin": "index/Leadbg.png", "name": "pool5", "height": 120 } }, { "type": "Image", "props": { "y": 710, "x": 559, "width": 120, "var": "pool6", "skin": "index/Leadbg.png", "name": "pool6", "height": 120 } }, { "type": "Image", "props": { "y": 844, "x": 244, "width": 120, "var": "pool7", "skin": "index/Leadbg.png", "name": "pool7", "height": 120 } }, { "type": "Image", "props": { "y": 844, "x": 402, "width": 120, "var": "pool8", "skin": "index/Leadbg.png", "name": "pool8", "height": 120 } }, { "type": "Image", "props": { "y": 844, "x": 559, "width": 120, "var": "pool9", "skin": "index/Leadbg.png", "name": "pool9", "height": 120 } }, { "type": "Image", "props": { "y": 979, "x": 244, "width": 120, "var": "pool10", "skin": "index/Leadbg.png", "name": "pool10", "height": 120 } }, { "type": "Image", "props": { "y": 979, "x": 402, "width": 120, "var": "pool11", "skin": "index/Leadbg.png", "name": "pool11", "height": 120 } }, { "type": "Image", "props": { "y": 979, "x": 559, "width": 120, "var": "pool12", "skin": "index/Leadbg.png", "name": "pool12", "height": 120 } }, { "type": "Image", "props": { "y": 0, "x": 0, "width": 720, "var": "AnimationPool", "name": "AnimationPool", "height": 550 } }, { "type": "Image", "props": { "y": 552, "x": 9, "var": "palace", "skin": "index/lenggong.png", "name": "palace" } }, { "type": "Image", "props": { "y": 1147, "x": 47, "width": 92, "var": "recovery", "skin": "index/delect.png", "name": "recovery", "height": 111 } }, { "type": "Button", "props": { "y": 1150, "x": 343, "width": 248, "var": "purchase", "stateNum": 2, "skin": "index/btn1.png", "name": "purchase", "height": 117 } }, { "type": "Image", "props": { "y": 1159, "x": 203, "skin": "index/recovery.png" } }, { "type": "Image", "props": { "y": 1018, "x": 34, "width": 118, "var": "Luckdraw", "skin": "index/invite.png", "name": "Luckdraw", "height": 118 } }, { "type": "Image", "props": { "y": 719, "x": 43, "width": 100, "skin": "index/rank.png", "height": 143 } }, { "type": "Button", "props": { "y": 1150, "x": 601, "width": 115, "var": "shop", "stateNum": 2, "skin": "index/btn2.png", "name": "shop", "height": 115 } }, { "type": "Image", "props": { "y": 29, "x": 16, "skin": "index/yuanbao_bg.png" } }, { "type": "Image", "props": { "y": 41, "x": 32, "skin": "index/yuanbao.png" } }, { "type": "Image", "props": { "y": 35, "x": 195, "width": 43, "var": "addcoin", "skin": "index/add2.png", "name": "addcoin", "height": 43 } }, { "type": "Image", "props": { "y": 28, "x": 265, "skin": "index/yuanbao_bg.png" } }, { "type": "Image", "props": { "y": 37, "x": 284, "width": 38, "skin": "index/copper2.png", "height": 38 } }, { "type": "Image", "props": { "y": 34, "x": 443, "width": 43, "var": "addmoney", "skin": "index/add2.png", "name": "addmoney", "height": 43 } }, { "type": "Text", "props": { "y": 110, "x": 325, "var": "coinspeed", "text": "0/秒", "name": "coinspeed", "fontSize": 35, "font": "Arial", "color": "#653e21", "bold": true } }, { "type": "Image", "props": { "y": 107, "x": 265, "width": 46, "skin": "index/copper2.png", "height": 46 } }, { "type": "Text", "props": { "y": 39, "x": 85, "width": 107, "var": "_Diamonds", "text": "8.888B", "name": "_Diamonds", "height": 30, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Text", "props": { "y": 39, "x": 326, "width": 113, "var": "coin", "text": "8.888B", "name": "coin", "height": 30, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true, "align": "center" } }, { "type": "Text", "props": { "y": 1226, "x": 418, "width": 155, "var": "purchase_text", "text": "1.8888B", "name": "purchase_text", "height": 25, "fontSize": 30, "font": "Arial", "color": "#653e21", "bold": true } }, { "type": "Image", "props": { "y": 878, "x": 33, "width": 120, "var": "turntable", "skin": "index/luck.png", "name": "turntable", "height": 129 } }, { "type": "Image", "props": { "y": 201, "x": 146, "width": 421, "var": "adminrange", "name": "adminrange", "height": 169 } }, { "type": "Image", "props": { "y": 298, "x": 52, "skin": "index/yuhuayuan.png" } }, { "type": "Box", "props": { "y": 495, "x": 189, "var": "adminList", "name": "adminList" }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "var": "adminList1", "skin": "index/weizhi2.png", "name": "adminList1" } }, { "type": "Image", "props": { "y": 0, "x": 72, "var": "adminList2", "skin": "index/weizhi2.png", "name": "adminList2" } }, { "type": "Image", "props": { "y": 0, "x": 144, "var": "adminList3", "skin": "index/weizhi2.png", "name": "adminList3" } }, { "type": "Image", "props": { "y": 0, "x": 216, "var": "adminList4", "skin": "index/weizhi2.png", "name": "adminList4" } }, { "type": "Image", "props": { "y": 0, "x": 288, "var": "adminList5", "skin": "index/weizhi2.png", "name": "adminList5" } }] }, { "type": "Image", "props": { "y": 208, "x": 634, "var": "help", "skin": "index/help.png", "name": "help" } }, { "type": "Image", "props": { "y": 290, "x": 635, "var": "audioCtr", "skin": "index/voice1.png", "name": "audioCtr" } }] };
         return indexUI;
     }(View));
     ui.indexUI = indexUI;
@@ -50608,7 +50760,7 @@ var ui;
             _super.prototype.createChildren.call(this);
             this.createView(ui.reward2UI.uiView);
         };
-        reward2UI.uiView = { "type": "Dialog", "props": { "width": 750, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": -100, "x": -156, "width": 1107, "skin": "index/mask.png", "height": 1570, "alpha": 0.7 } }, { "type": "Image", "props": { "y": 635, "x": 371, "var": "content", "name": "content", "anchorY": 0.5, "anchorX": 0.5 }, "child": [{ "type": "Image", "props": { "y": -206, "x": 5, "width": 413, "var": "Light", "skin": "index/yuanb_bg.png", "rotation": 0, "pivotY": 196, "pivotX": 204, "name": "Light", "height": 406 } }, { "type": "Text", "props": { "y": 42, "x": -370, "width": 750, "var": "reward", "valign": "middle", "strokeColor": "#101010", "stroke": 8, "pivotY": 0.5, "pivotX": 0.5, "name": "reward", "height": 70, "fontSize": 30, "font": "Arial", "color": "#fffde3", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": -232, "x": -32, "var": "proptype", "skin": "index/jiangquan.png", "name": "proptype" } }] }, { "type": "Image", "props": { "y": 840, "x": 386, "var": "close_Btn", "skin": "index/btnsure.png", "name": "close_Btn", "anchorY": 0.5, "anchorX": 0.5 } }] };
+        reward2UI.uiView = { "type": "Dialog", "props": { "width": 750, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": -100, "x": -156, "width": 1107, "skin": "index/mask.png", "height": 1570, "alpha": 0.7 } }, { "type": "Image", "props": { "y": 635, "x": 371, "var": "content", "name": "content", "anchorY": 0.5, "anchorX": 0.5 }, "child": [{ "type": "Image", "props": { "y": -206, "x": 5, "width": 413, "var": "Light", "skin": "index/yuanb_bg.png", "rotation": 0, "pivotY": 196, "pivotX": 204, "name": "Light", "height": 406 } }, { "type": "Text", "props": { "y": 42, "x": -370, "width": 750, "var": "reward", "valign": "middle", "strokeColor": "#101010", "stroke": 8, "pivotY": 0.5, "pivotX": 0.5, "name": "reward", "height": 70, "fontSize": 30, "font": "Arial", "color": "#fffde3", "bold": true, "align": "center" } }, { "type": "Image", "props": { "y": -206, "x": 3, "var": "proptype", "skin": "index/jiangquan.png", "scaleY": 2, "scaleX": 2, "name": "proptype", "anchorY": 0.5, "anchorX": 0.5 } }] }, { "type": "Image", "props": { "y": 840, "x": 386, "var": "close_Btn", "skin": "index/btnsure.png", "name": "close_Btn", "anchorY": 0.5, "anchorX": 0.5 } }] };
         return reward2UI;
     }(Dialog));
     ui.reward2UI = reward2UI;
@@ -50623,7 +50775,7 @@ var ui;
             _super.prototype.createChildren.call(this);
             this.createView(ui.shareUI.uiView);
         };
-        shareUI.uiView = { "type": "Dialog", "props": { "width": 750, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": -80, "x": -141, "width": 1107, "skin": "index/mask.png", "height": 1570, "alpha": 0.7 } }, { "type": "Image", "props": { "y": 652, "x": 391, "width": 569, "var": "content", "skin": "index/tipsbg2.png", "name": "content", "height": 973, "anchorY": 0.5, "anchorX": 0.5 }, "child": [{ "type": "Image", "props": { "y": 265, "x": 373, "skin": "index/receive3.png" } }] }, { "type": "Image", "props": { "y": 171, "x": 671, "var": "close_Btn", "skin": "index/close.png", "name": "close_Btn", "anchorY": 0.5, "anchorX": 0.5 } }] };
+        shareUI.uiView = { "type": "Dialog", "props": { "width": 750, "height": 1280 }, "child": [{ "type": "Image", "props": { "y": -80, "x": -141, "width": 1107, "skin": "index/mask.png", "height": 1570, "alpha": 0.7 } }, { "type": "Image", "props": { "y": 652, "x": 360, "width": 569, "var": "content", "skin": "index/tipsbg2.png", "name": "content", "height": 973, "anchorY": 0.5, "anchorX": 0.5 }, "child": [{ "type": "Image", "props": { "y": 265, "x": 373, "skin": "index/receive3.png" } }] }, { "type": "Image", "props": { "y": 171, "x": 671, "var": "close_Btn", "skin": "index/close.png", "name": "close_Btn", "anchorY": 0.5, "anchorX": 0.5 } }] };
         return shareUI;
     }(Dialog));
     ui.shareUI = shareUI;
@@ -50646,14 +50798,26 @@ var ui;
 })(ui || (ui = {}));
 //# sourceMappingURL=layaUI.max.all.js.map
 var WebGL = Laya.WebGL;
+var Browser = Laya.Browser;
 // 程序入口
 var GameMain = /** @class */ (function () {
     function GameMain() {
         Laya.MiniAdpter.init();
+        // // 异形屏适配
+        // let onIPhoneX;
+        // if (Browser.onIPhone && Math.abs(Browser.pixelRatio - 3) < 0.01) {
+        //     onIPhoneX = (Browser.clientWidth == 375 && Browser.clientHeight == 812) || (Browser.clientWidth == 812 && Browser.clientHeight == 375);
+        // }
+        // if (onIPhoneX) {
+        //     console.log("iphonex");
+        //     //初始化引擎
+        //     Laya.init(Browser.clientWidth * Browser.pixelRatio, Browser.clientHeight * Browser.pixelRatio, WebGL);
+        // } else {
+        // }
         Laya.init(720, 1280, WebGL);
         Laya.stage.alignV = "middle";
         Laya.stage.alignH = "center";
-        Laya.stage.scaleMode = "exactfit";
+        Laya.stage.scaleMode = "fixedwidth";
         Laya.stage.screenMode = "none";
         //开启统计信息
         // Laya.Stat.show();
