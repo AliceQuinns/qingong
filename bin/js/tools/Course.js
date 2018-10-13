@@ -65,8 +65,10 @@ var GAME;
             this.hand.pos(target.x, target.y + target.height / 2);
             movePos(this.hand, { x: this.hand.x, y: this.hand.y }, { x: this.hand.x + target.width - this.hand.width, y: this.hand.y }, 15);
             target.once(Laya.Event.CLICK, this, function (e) {
-                _this.Synthesis();
-                a = [target.zOrder, target.zOrder = a][0];
+                window.setTimeout(function () {
+                    _this.Synthesis();
+                    a = [target.zOrder, target.zOrder = a][0];
+                }, 500);
             });
         };
         // 合成教程
@@ -74,35 +76,36 @@ var GAME;
             var _this = this;
             this.tipstext.text = "拖动升级";
             var pool1, pool2;
-            if (!this.targetUI.getChildByName("pool1")["leadClass"] || !this.targetUI.getChildByName("pool2")["leadClass"]) {
-                pool1 = this.targetUI.getChildByName("pool1");
-                pool2 = this.targetUI.getChildByName("pool2");
+            // 显示全部的主角
+            for (var i = 12; i--;) {
+                var target = this.targetUI.getChildByName("pool" + (i + 1));
+                if (!!target["leadClass"]) {
+                    target["leadClass"].icon.parent.zOrder = 120;
+                }
             }
-            else {
-                pool1 = this.targetUI.getChildByName("pool1").leadClass.icon.parent;
-                pool2 = this.targetUI.getChildByName("pool2").leadClass.icon.parent;
-            }
-            var a = pool1._zOrder;
-            pool1.zOrder = 120;
-            pool2.zOrder = pool1.zOrder;
+            ;
+            pool1 = this.targetUI.getChildByName("pool1");
             this.tips.pos(pool1.x - pool1.width / 2, pool1.y - pool1.height * 1.2);
             this.hand.pos(pool1.x, pool1.y + pool1.height);
             movePos(this.hand, { x: this.hand.x, y: this.hand.y }, { x: this.hand.x + 200, y: this.hand.y }, 15);
-            pool1.once(Laya.Event.CLICK, this, function (e) {
+            Laya.stage.once("upgradeLead", this, function (e) {
+                console.log("升级成功");
                 _this.work();
-                pool1.zOrder = a;
-                pool2.zOrder = pool1.zOrder;
-            });
-            pool2.once(Laya.Event.CLICK, this, function (e) {
-                _this.work();
-                pool1.zOrder = a;
-                pool2.zOrder = pool1.zOrder;
             });
         };
         // 工作教程
         Course.prototype.work = function () {
             var _this = this;
-            this.mask.zOrder = -1;
+            window.setTimeout(function () {
+                // 显示全部的主角
+                for (var i = 12; i--;) {
+                    var target = _this.targetUI.getChildByName("pool" + (i + 1));
+                    if (!!target["leadClass"]) {
+                        target["leadClass"].icon.parent.zOrder = 120;
+                    }
+                }
+                ;
+            }, 200);
             this.tips.pos(179, 200);
             movePos(this.hand, { x: 200, y: 310 }, { x: this.hand.x, y: this.hand.y }, 15);
             this.tipstext.text = "拖动玩家到此";
@@ -113,11 +116,10 @@ var GAME;
         // 冷宫教程
         Course.prototype.palace = function () {
             var _this = this;
-            this.mask.zOrder = 102;
             this.tipstext.text = "进入攻击敌人";
             var target = this.targetUI.palace;
             target.zOrder = this._zOrder;
-            this.tips.pos(target.x, target.y - target.height * 1.2);
+            this.tips.pos(target.x, target.y - target.height * 1);
             this.hand.pos(target.x, target.y + target.height * 1.2);
             movePos(this.hand, { x: this.hand.x, y: this.hand.y }, { x: this.hand.x + target.width, y: this.hand.y }, 15);
             target.once(Laya.Event.CLICK, this, function (e) {

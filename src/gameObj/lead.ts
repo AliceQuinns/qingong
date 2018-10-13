@@ -137,7 +137,7 @@ module GAME {
 
         // 升级
         private upgrade(datas) {
-            
+
             let targetobjs;
             if (datas.AdminTimer) {
                 targetobjs = datas.icon.child;
@@ -170,6 +170,8 @@ module GAME {
                         cycle: data.cycle,
                     };
                     let newLead = new GAME.lead(user, this.stage);
+
+                    Laya.stage.event("upgradeLead");// 派发升级事件
 
                     // Laya.stage.event("Synthesis", newLead);// 发送合成事件
 
@@ -376,7 +378,10 @@ module GAME {
         // 结束工作按钮的事件
         private endWork() {
             this.icon.child.once(Laya.Event.CLICK, this, e => {
-                Laya.Tween.to(this.icon.parent, { x: this.position.x, y: this.position.y }, 50);
+                this.AdminTimer = false;// 停止动画
+                window.setTimeout(() => {
+                    Laya.Tween.to(this.icon.parent, { x: this.position.x, y: this.position.y }, 100);
+                }, 0);
 
                 window["_audio"].random();
                 Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/stoprole.php", {
@@ -384,7 +389,7 @@ module GAME {
                     roleid: this.id,
                     position: this.seat.name.slice(4)
                 }, data => {
-                    this.AdminTimer = false;// 停止动画
+                    // this.AdminTimer = false;// 停止动画
                     this.icon.child.alpha = 0;
                     this.cointimer("stop");// 停止工作
 

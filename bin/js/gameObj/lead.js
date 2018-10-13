@@ -130,6 +130,7 @@ var GAME;
                         cycle: data.cycle,
                     };
                     var newLead = new GAME.lead(user, _this.stage);
+                    Laya.stage.event("upgradeLead"); // 派发升级事件
                     // Laya.stage.event("Synthesis", newLead);// 发送合成事件
                     if (!!data.role_level)
                         Laya.stage.event("rolelevelSet", data.role_level); // 更新人物解锁等级
@@ -308,14 +309,17 @@ var GAME;
         lead.prototype.endWork = function () {
             var _this = this;
             this.icon.child.once(Laya.Event.CLICK, this, function (e) {
-                Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 50);
+                _this.AdminTimer = false; // 停止动画
+                window.setTimeout(function () {
+                    Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 100);
+                }, 0);
                 window["_audio"].random();
                 Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/stoprole.php", {
                     openid: LeadInfo.openID,
                     roleid: _this.id,
                     position: _this.seat.name.slice(4)
                 }, function (data) {
-                    _this.AdminTimer = false; // 停止动画
+                    // this.AdminTimer = false;// 停止动画
                     _this.icon.child.alpha = 0;
                     _this.cointimer("stop"); // 停止工作
                     window.setTimeout(function () {

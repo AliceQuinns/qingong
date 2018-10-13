@@ -89,7 +89,7 @@ var drag = function (element, callback) {
         y: element.y,
         offsetX: 0,
         offsetY: 0,
-        zOrder: element.zOrder,
+        zOrder: 150,
         element: element
     };
     // 拖动前
@@ -151,6 +151,7 @@ var drag = function (element, callback) {
 var createLead = function (type, size) {
     if (size === void 0) { size = null; }
     var target = new Laya.Image("Lead/" + type + ".png");
+    target.zOrder = 150;
     if (!!size) {
         target.width = size.width;
         target.height = size.height;

@@ -63,6 +63,7 @@ var GAME;
                     _this.staticObj(); // 静态化常用变量
                     _this.Floaticon(); // 引导收藏图标
                     console.log(data);
+                    // data.isnew = "1"; 
                     // 非新用户显示离线收益与签到
                     if (data.isnew.toString() === "2") {
                         // 收益弹框
@@ -360,8 +361,8 @@ var GAME;
             // 更新玩家解锁等级
             Laya.stage.on("rolelevelSet", this, function (e) {
                 if (!!e) {
-                    _this.GameInfo.role_level = e;
-                    _this.GameInfo.grade = e + 4;
+                    _this.GameInfo.role_level = Number(e);
+                    _this.GameInfo.grade = Number(e) + 4;
                 }
                 ;
                 console.log("更新人物解锁等级为", e);

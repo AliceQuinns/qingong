@@ -48632,6 +48632,7 @@ var GAME;
                     _this.staticObj(); // 静态化常用变量
                     _this.Floaticon(); // 引导收藏图标
                     console.log(data);
+                    // data.isnew = "1"; 
                     // 非新用户显示离线收益与签到
                     if (data.isnew.toString() === "2") {
                         // 收益弹框
@@ -48929,8 +48930,8 @@ var GAME;
             // 更新玩家解锁等级
             Laya.stage.on("rolelevelSet", this, function (e) {
                 if (!!e) {
-                    _this.GameInfo.role_level = e;
-                    _this.GameInfo.grade = e + 4;
+                    _this.GameInfo.role_level = Number(e);
+                    _this.GameInfo.grade = Number(e) + 4;
                 }
                 ;
                 console.log("更新人物解锁等级为", e);
@@ -49379,7 +49380,7 @@ var drag = function (element, callback) {
         y: element.y,
         offsetX: 0,
         offsetY: 0,
-        zOrder: element.zOrder,
+        zOrder: 150,
         element: element
     };
     // 拖动前
@@ -49441,6 +49442,7 @@ var drag = function (element, callback) {
 var createLead = function (type, size) {
     if (size === void 0) { size = null; }
     var target = new Laya.Image("Lead/" + type + ".png");
+    target.zOrder = 150;
     if (!!size) {
         target.width = size.width;
         target.height = size.height;
@@ -50144,8 +50146,10 @@ var GAME;
             this.hand.pos(target.x, target.y + target.height / 2);
             movePos(this.hand, { x: this.hand.x, y: this.hand.y }, { x: this.hand.x + target.width - this.hand.width, y: this.hand.y }, 15);
             target.once(Laya.Event.CLICK, this, function (e) {
-                _this.Synthesis();
-                a = [target.zOrder, target.zOrder = a][0];
+                window.setTimeout(function () {
+                    _this.Synthesis();
+                    a = [target.zOrder, target.zOrder = a][0];
+                }, 500);
             });
         };
         // 合成教程
@@ -50153,35 +50157,36 @@ var GAME;
             var _this = this;
             this.tipstext.text = "拖动升级";
             var pool1, pool2;
-            if (!this.targetUI.getChildByName("pool1")["leadClass"] || !this.targetUI.getChildByName("pool2")["leadClass"]) {
-                pool1 = this.targetUI.getChildByName("pool1");
-                pool2 = this.targetUI.getChildByName("pool2");
+            // 显示全部的主角
+            for (var i = 12; i--;) {
+                var target = this.targetUI.getChildByName("pool" + (i + 1));
+                if (!!target["leadClass"]) {
+                    target["leadClass"].icon.parent.zOrder = 120;
+                }
             }
-            else {
-                pool1 = this.targetUI.getChildByName("pool1").leadClass.icon.parent;
-                pool2 = this.targetUI.getChildByName("pool2").leadClass.icon.parent;
-            }
-            var a = pool1._zOrder;
-            pool1.zOrder = 120;
-            pool2.zOrder = pool1.zOrder;
+            ;
+            pool1 = this.targetUI.getChildByName("pool1");
             this.tips.pos(pool1.x - pool1.width / 2, pool1.y - pool1.height * 1.2);
             this.hand.pos(pool1.x, pool1.y + pool1.height);
             movePos(this.hand, { x: this.hand.x, y: this.hand.y }, { x: this.hand.x + 200, y: this.hand.y }, 15);
-            pool1.once(Laya.Event.CLICK, this, function (e) {
+            Laya.stage.once("upgradeLead", this, function (e) {
+                console.log("升级成功");
                 _this.work();
-                pool1.zOrder = a;
-                pool2.zOrder = pool1.zOrder;
-            });
-            pool2.once(Laya.Event.CLICK, this, function (e) {
-                _this.work();
-                pool1.zOrder = a;
-                pool2.zOrder = pool1.zOrder;
             });
         };
         // 工作教程
         Course.prototype.work = function () {
             var _this = this;
-            this.mask.zOrder = -1;
+            window.setTimeout(function () {
+                // 显示全部的主角
+                for (var i = 12; i--;) {
+                    var target = _this.targetUI.getChildByName("pool" + (i + 1));
+                    if (!!target["leadClass"]) {
+                        target["leadClass"].icon.parent.zOrder = 120;
+                    }
+                }
+                ;
+            }, 200);
             this.tips.pos(179, 200);
             movePos(this.hand, { x: 200, y: 310 }, { x: this.hand.x, y: this.hand.y }, 15);
             this.tipstext.text = "拖动玩家到此";
@@ -50192,11 +50197,10 @@ var GAME;
         // 冷宫教程
         Course.prototype.palace = function () {
             var _this = this;
-            this.mask.zOrder = 102;
             this.tipstext.text = "进入攻击敌人";
             var target = this.targetUI.palace;
             target.zOrder = this._zOrder;
-            this.tips.pos(target.x, target.y - target.height * 1.2);
+            this.tips.pos(target.x, target.y - target.height * 1);
             this.hand.pos(target.x, target.y + target.height * 1.2);
             movePos(this.hand, { x: this.hand.x, y: this.hand.y }, { x: this.hand.x + target.width, y: this.hand.y }, 15);
             target.once(Laya.Event.CLICK, this, function (e) {
@@ -50358,6 +50362,7 @@ var GAME;
                         cycle: data.cycle,
                     };
                     var newLead = new GAME.lead(user, _this.stage);
+                    Laya.stage.event("upgradeLead"); // 派发升级事件
                     // Laya.stage.event("Synthesis", newLead);// 发送合成事件
                     if (!!data.role_level)
                         Laya.stage.event("rolelevelSet", data.role_level); // 更新人物解锁等级
@@ -50536,14 +50541,17 @@ var GAME;
         lead.prototype.endWork = function () {
             var _this = this;
             this.icon.child.once(Laya.Event.CLICK, this, function (e) {
-                Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 50);
+                _this.AdminTimer = false; // 停止动画
+                window.setTimeout(function () {
+                    Laya.Tween.to(_this.icon.parent, { x: _this.position.x, y: _this.position.y }, 100);
+                }, 0);
                 window["_audio"].random();
                 Ajax("get", "https://shop.yunfanshidai.com/xcxht/qinggong/api/stoprole.php", {
                     openid: LeadInfo.openID,
                     roleid: _this.id,
                     position: _this.seat.name.slice(4)
                 }, function (data) {
-                    _this.AdminTimer = false; // 停止动画
+                    // this.AdminTimer = false;// 停止动画
                     _this.icon.child.alpha = 0;
                     _this.cointimer("stop"); // 停止工作
                     window.setTimeout(function () {

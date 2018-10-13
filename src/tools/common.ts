@@ -91,7 +91,7 @@ let drag = (element, callback: any = null) => {
         y: element.y,// 拖动前Y值
         offsetX: 0, // 偏移X值
         offsetY: 0, // 偏移Y值
-        zOrder: element.zOrder,// 层级
+        zOrder: 150,// 层级
         element: element
     };
 
@@ -159,6 +159,7 @@ let drag = (element, callback: any = null) => {
 let createLead = (type: number, size: any = null) => {
 
     var target: Laya.Image = new Laya.Image(`Lead/${type}.png`);
+    target.zOrder = 150;
 
     if (!!size) {
         target.width = size.width;

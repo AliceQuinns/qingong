@@ -86,8 +86,10 @@ module GAME {
             movePos(this.hand, { x: this.hand.x, y: this.hand.y }, { x: this.hand.x + target.width - this.hand.width, y: this.hand.y }, 15);
 
             target.once(Laya.Event.CLICK, this, e => {
-                this.Synthesis();
-                a = [target.zOrder, target.zOrder = a][0];
+                window.setTimeout(() => {
+                    this.Synthesis();
+                    a = [target.zOrder, target.zOrder = a][0];
+                }, 500);
             })
         }
 
@@ -96,17 +98,17 @@ module GAME {
             this.tipstext.text = "拖动升级";
             let pool1, pool2;
 
-            if (!this.targetUI.getChildByName("pool1")["leadClass"] || !this.targetUI.getChildByName("pool2")["leadClass"]) {
-                pool1 = this.targetUI.getChildByName("pool1");
-                pool2 = this.targetUI.getChildByName("pool2");
-            } else {
-                pool1 = this.targetUI.getChildByName("pool1").leadClass.icon.parent;
-                pool2 = this.targetUI.getChildByName("pool2").leadClass.icon.parent;
-            }
+            // 显示全部的主角
+            for (let i = 12; i--;) {
+                let target = this.targetUI.getChildByName(`pool${i + 1}`) as Laya.Image;
+                if (!!target["leadClass"]) {
+                    target["leadClass"].icon.parent.zOrder = 120;
+                }
+            };
 
-            let a = pool1._zOrder;
-            pool1.zOrder = 120;
-            pool2.zOrder = pool1.zOrder;
+
+            pool1 = this.targetUI.getChildByName("pool1");
+
 
             this.tips.pos(pool1.x - pool1.width / 2, pool1.y - pool1.height * 1.2);
 
@@ -114,22 +116,23 @@ module GAME {
 
             movePos(this.hand, { x: this.hand.x, y: this.hand.y }, { x: this.hand.x + 200, y: this.hand.y }, 15);
 
-            pool1.once(Laya.Event.CLICK, this, e => {
+            Laya.stage.once("upgradeLead", this, e => {
+                console.log("升级成功");
                 this.work();
-                pool1.zOrder = a;
-                pool2.zOrder = pool1.zOrder;
-            });
-
-            pool2.once(Laya.Event.CLICK, this, e => {
-                this.work();
-                pool1.zOrder = a;
-                pool2.zOrder = pool1.zOrder;
             })
         }
 
         // 工作教程
         public work() {
-            this.mask.zOrder = -1;
+            window.setTimeout(() => {
+                // 显示全部的主角
+                for (let i = 12; i--;) {
+                    let target = this.targetUI.getChildByName(`pool${i + 1}`) as Laya.Image;
+                    if (!!target["leadClass"]) {
+                        target["leadClass"].icon.parent.zOrder = 120;
+                    }
+                };
+            }, 200)
 
             this.tips.pos(179, 200);
 
@@ -144,13 +147,13 @@ module GAME {
 
         // 冷宫教程
         public palace() {
-            this.mask.zOrder = 102;
+
             this.tipstext.text = "进入攻击敌人";
 
             let target = this.targetUI.palace as Laya.Image;
             target.zOrder = this._zOrder;
 
-            this.tips.pos(target.x, target.y - target.height * 1.2);
+            this.tips.pos(target.x, target.y - target.height * 1);
             this.hand.pos(target.x, target.y + target.height * 1.2);
 
             movePos(this.hand, { x: this.hand.x, y: this.hand.y }, { x: this.hand.x + target.width, y: this.hand.y }, 15);
@@ -164,7 +167,7 @@ module GAME {
 
                     this.tips.pos(Laya.stage.width * 0.2, Laya.stage.height * 0.1);
                     this.hand.pos(Laya.stage.width * 0.3, Laya.stage.height * 0.3);
-                    
+
 
                     Laya.stage.removeChild(this.hand);
                     Laya.stage.removeChild(this.tips);
